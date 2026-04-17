@@ -1,0 +1,157 @@
+@model MaintenanceRequestApp.ViewModels.MaintenanceListViewModel
+@{
+    ViewData["Title"] = "Trưởng nhóm / Quản lý Kỹ thuật";
+}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h5 class="fw-bold mb-4 text-vjaa"><i class="bi bi-person-workspace me-2"></i> Kế hoạch Bảo trì (Đã duyệt)</h5>
+
+        <form method="get" class="mb-4 bg-light p-3 rounded rounded-3 border">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-dark">Trạng thái</label>
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="">-- Tất cả --</option>
+                        <option value="2" selected="@(Model.Status == 2)">Đã duyệt</option>
+                        <option value="3" selected="@(Model.Status == 3)">Đang sửa</option>
+                        <option value="4" selected="@(Model.Status == 4)">Hoàn thành</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-dark">Tìm kiếm</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="searchTerm" value="@Model.SearchTerm" placeholder="Tên KH, Thiết bị, Vị trí..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-dark">Nhân viên phụ trách</label>
+                    <select class="form-select form-select-sm" name="staffId">
+                        <option value="">-- Chọn nhân viên --</option>
+                        @foreach(var staff in ViewBag.Staffs)
+                        {
+                            <option value="@staff.UserId" selected="@(Model.StaffId == staff.UserId)">@staff.FirstName @staff.LastName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-vjaa w-100"><i class="bi bi-funnel me-1"></i> Lọc</button>
+                    <a href="/Manager/Index" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-x-circle me-1"></i> Xóa</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Thiết bị / Vị trí</th>
+                        <th>Ngày tạo</th>
+                        <th>Phụ trách</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in Model.Requests)
+                    {
+                        <tr>
+                            <td>
+                                @if(item.Status == 2){ <span class="badge bg-info">Đã duyệt</span> }
+                                else if(item.Status == 3){ <span class="badge bg-warning text-dark">Đang sửa</span> }
+                                else if(item.Status == 4){ <span class="badge bg-success">Hoàn thành</span> }
+                            </td>
+                            <td>
+                                <div class="fw-bold">@item.EquipmentDamged</div>
+                                <div class="small text-muted">@item.Location</div>
+                            </td>
+                            <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if(item.Assignments != null && item.Assignments.Any())
+                                {
+                                    @foreach(var a in item.Assignments)
+                                    {
+                                        <div class="badge bg-light text-dark border">@(a.User?.FirstName + " " + a.User?.LastName)</div>
+                                    }
+                                }
+                                else { <span class="text-muted small">N/A</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignModal-@item.Id" title="Giao việc / Báo cáo"><i class="bi bi-pencil-square"></i></button>
+                                    @if(item.Status != 4)
+                                    {
+                                        <form asp-action="Close" method="post">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Xác nhận Hoàn thành" onclick="return confirm('Duyệt hoàn thành?');"><i class="bi bi-check-all"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Manager actions -->
+                        <div class="modal fade" id="assignModal-@item.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-vjaa text-white">
+                                        <h5 class="modal-title">Xử lý Sự cố</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form asp-action="Assign" method="post" class="mb-4 bg-light p-3 rounded border">
+                                            <h6 class="fw-bold text-dark"><i class="bi bi-person-fill-add me-1"></i> Giao việc</h6>
+                                            <input type="hidden" name="requestId" value="@item.Id" />
+                                            <div class="mb-2">
+                                                <select name="userId" class="form-select form-select-sm" required>
+                                                    <option value="">-- Chọn nhân viên --</option>
+                                                    @foreach(var staff in ViewBag.Staffs)
+                                                    {
+                                                        <option value="@staff.UserId">@staff.FirstName @staff.LastName (@staff.Username)</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" name="notifyEmail" value="true" id="mail-@item.Id">
+                                                <label class="form-check-label small" for="mail-@item.Id">Email thông báo cho NV</label>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">Cập nhật phân công</button>
+                                        </form>
+
+                                        <form asp-action="AddNote" method="post" enctype="multipart/form-data" class="bg-light p-3 rounded border">
+                                            <h6 class="fw-bold text-dark"><i class="bi bi-journal-text me-1"></i> Thêm Ghi chú / Chỉ đạo</h6>
+                                            <input type="hidden" name="requestId" value="@item.Id" />
+                                            <div class="mb-2">
+                                                <textarea name="noteContent" class="form-control" rows="2" placeholder="Nhập ghi chú..." required></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label small text-muted">Đính kèm ảnh (WebP Optimize)</label>
+                                                <input type="file" name="imageFile" class="form-control form-control-sm" accept="image/jpeg, image/png, image/jpg" />
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-secondary w-100">Lưu Ghi chú</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination pagination-sm justify-content-center">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = i, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

@@ -1,0 +1,59 @@
+## .NET / ASP.NET Core
+
+# Build output
+bin/
+obj/
+.DS_Store
+
+# NuGet packages
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.sln.cache
+
+# VS Code
+.vscode/
+
+# Publish output
+**/publish/
+**/PublishProfiles/
+
+# User secrets
+secrets.json
+appsettings.Development.json
+
+# Logs
+*.log
+logs/
+
+# Entity Framework migrations temp
+# (Keep Migrations folder — migrations are important)
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+## Uploaded files (user uploads at runtime)
+CheckinGuestApp/wwwroot/uploads/
+
+## Docker (optional, keep Dockerfile but ignore local tmp)
+docker-compose.override.yml
+
+## Environment / secrets
+.env
+.env.*
+*.pfx
+*.p12
+.DS_Store
+.DS_Store
+wwwroot/.DS_Store

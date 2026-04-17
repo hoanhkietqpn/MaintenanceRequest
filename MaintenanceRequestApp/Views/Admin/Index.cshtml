@@ -1,0 +1,157 @@
+@model MaintenanceRequestApp.ViewModels.MaintenanceListViewModel
+@{
+    ViewData["Title"] = "Tổng quan Quản trị";
+}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-list-task me-2"></i> Danh sách Yêu cầu bảo trì</h5>
+        
+        <form method="get" class="mb-4 bg-light p-3 rounded rounded-3 border">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Trạng thái</label>
+                    <select class="form-select form-select-sm" name="status">
+                        <option value="">-- Tất cả --</option>
+                        <option value="1" selected="@(Model.Status == 1)">Khởi tạo</option>
+                        <option value="2" selected="@(Model.Status == 2)">Đã phê duyệt</option>
+                        <option value="3" selected="@(Model.Status == 3)">Đang sửa</option>
+                        <option value="4" selected="@(Model.Status == 4)">Hoàn thành</option>
+                        <option value="5" selected="@(Model.Status == 5)">Hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Tìm kiếm</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="searchTerm" value="@Model.SearchTerm" placeholder="Họ tên, Thiết bị, Mô tả..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Nhân viên phụ trách</label>
+                    <select class="form-select form-select-sm" name="staffId">
+                        <option value="">-- Chọn nhân viên --</option>
+                        @foreach(var staff in ViewBag.Staffs)
+                        {
+                            <option value="@staff.UserId" selected="@(Model.StaffId == staff.UserId)">@staff.FirstName @staff.LastName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel me-1"></i> Lọc</button>
+                    <a href="/Admin/Index" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-x-circle me-1"></i> Xóa</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Thiết bị</th>
+                        <th>Vị trí</th>
+                        <th>Mức độ</th>
+                        <th>Ngày tạo</th>
+                        <th>Người phụ trách</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in Model.Requests)
+                    {
+                        <tr>
+                            <td>
+                                @if(item.Status == 1){ <span class="badge bg-secondary">Khởi tạo</span> }
+                                else if(item.Status == 2){ <span class="badge bg-info">Đã phê duyệt</span> }
+                                else if(item.Status == 3){ <span class="badge bg-warning text-dark">Đang sửa</span> }
+                                else if(item.Status == 4){ <span class="badge bg-success">Hoàn thành</span> }
+                            </td>
+                            <td class="fw-bold">@item.EquipmentDamged</td>
+                            <td>@item.Location</td>
+                            <td>@item.Urgency</td>
+                            <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if(item.Assignments != null && item.Assignments.Any())
+                                {
+                                    @foreach(var a in item.Assignments)
+                                    {
+                                        <span class="badge bg-light text-dark border">@a.UserId</span>
+                                    }
+                                }
+                                else { <span class="text-muted small">Chưa phân công</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    @if(item.Status == 1)
+                                    {
+                                        <form asp-action="Approve" method="post">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Phê duyệt"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                    }
+                                    @if(item.Status == 2 || item.Status == 3)
+                                    {
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal-@item.Id" title="Giao việc"><i class="bi bi-person-plus"></i></button>
+                                    }
+                                    @if(item.Status != 4 && item.Status != 5)
+                                    {
+                                        <form asp-action="Close" method="post">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Đóng Task" onclick="return confirm('Chắc chắn đóng yêu cầu này?');"><i class="bi bi-x-octagon"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Assign -->
+                        <div class="modal fade" id="assignModal-@item.Id" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">Phân công việc</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form asp-action="Assign" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="requestId" value="@item.Id" />
+                                            <div class="mb-3">
+                                                <label class="form-label">Chọn nhân sự</label>
+                                                <select name="userId" class="form-select" required>
+                                                    <option value="">-- Chọn nhân viên --</option>
+                                                    @foreach(var staff in ViewBag.Staffs)
+                                                    {
+                                                        <option value="@staff.UserId">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                            <button type="submit" class="btn btn-primary">Giao việc</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination pagination-sm justify-content-center">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = i, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

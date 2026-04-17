@@ -1,0 +1,67 @@
+@model MaintenanceRequestApp.Models.RequestMaintenance
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Trạng thái Yêu cầu";
+}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0 rounded-3 mb-4">
+            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2"></i>Chi tiết Sự cố / Incident Details</h5>
+                <span class="badge bg-light text-primary fs-6">
+                    @if(Model.Status == 1) { <span>Khởi tạo / Init</span> }
+                    else if(Model.Status == 2) { <span>Đã duyệt / Approved</span> }
+                    else if(Model.Status == 3) { <span>Đang sửa / In Progress</span> }
+                    else if(Model.Status == 4) { <span>Hoàn thành / Completed</span> }
+                    else if(Model.Status == 5) { <span>Đã Hủy / Canceled</span> }
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted fw-bold">Mã / ID:</div>
+                    <div class="col-md-8 text-break"><code>@Model.Id</code></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted fw-bold">Thiết bị / Equipment:</div>
+                    <div class="col-md-8">@Model.EquipmentDamged</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted fw-bold">Vị trí / Location:</div>
+                    <div class="col-md-8">@Model.Location</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 text-muted fw-bold">Mô tả / Description:</div>
+                    <div class="col-md-8">@Model.Description</div>
+                </div>
+
+                @if(Model.Medias != null && Model.Medias.Any())
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted fw-bold">Hình ảnh đính kèm:</div>
+                        <div class="col-md-8 d-flex flex-wrap gap-2">
+                            @foreach(var img in Model.Medias)
+                            {
+                                <img src="@img.FilePath" class="img-thumbnail rounded" style="width: 150px; height: 150px; object-fit: cover;" alt="Minh chứng" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-clock-history me-1"></i> Lịch sử Xử lý / Processing History</h5>
+        <div class="timeline ps-3" style="border-left: 2px solid #90c740;">
+            @if(Model.AuditLogs != null && Model.AuditLogs.Any())
+            {
+                foreach(var log in Model.AuditLogs.OrderByDescending(l => l.Timestamp))
+                {
+                    <div class="position-relative mb-4">
+                        <div class="position-absolute bg-primary rounded-circle" style="width: 12px; height: 12px; left: -23px; top: 5px;"></div>
+                        <div class="text-muted small">@log.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                        <div class="fw-bold mt-1">@log.Action</div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

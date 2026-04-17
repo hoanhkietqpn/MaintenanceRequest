@@ -1,0 +1,130 @@
+@model MaintenanceRequestApp.ViewModels.KPIReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo Hiệu suất (KPI)";
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3 text-vjaa"><i class="bi bi-funnel me-2"></i> Bộ lọc Báo cáo</h5>
+        <form method="get" asp-action="Index">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Từ ngày</label>
+                    <input type="date" class="form-control" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Đến ngày</label>
+                    <input type="date" class="form-control" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold">Nhân viên kỹ thuật</label>
+                    <select class="form-select" name="staffId">
+                        <option value="">-- Tất cả nhân viên --</option>
+                        @foreach (var staff in ViewBag.StaffList)
+                        {
+                            if (Model.StaffId == staff.UserId)
+                            {
+                                <option value="@staff.UserId" selected>@staff.Username - @staff.FirstName @staff.LastName</option>
+                            }
+                            else
+                            {
+                                <option value="@staff.UserId">@staff.Username - @staff.FirstName @staff.LastName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-vjaa w-100"><i class="bi bi-search me-1"></i> Lọc dữ liệu</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Tóm tắt KPI Nhân viên -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom fw-bold text-dark">
+                <i class="bi bi-people-fill me-2 text-vjaa"></i> Tổng hợp Nhân sự
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @if(!Model.StaffSummaries.Any())
+                    {
+                        <li class="list-group-item text-muted text-center py-4">Chưa có dữ liệu thống kê.</li>
+                    }
+                    @foreach(var summary in Model.StaffSummaries)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <h6 class="mb-0 fw-bold">@summary.StaffName</h6>
+                                <small class="text-muted">Hoàn thành: @summary.TotalTasksCompleted nhiệm vụ</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-vjaa rounded-pill px-3 py-2">
+                                    @summary.AverageCompletionTimeHours h / task
+                                </span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chi tiết Task -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom fw-bold text-dark">
+                <i class="bi bi-list-check me-2 text-vjaa"></i> Lịch sử Công việc Kỹ thuật
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Sự cố / Thiết bị</th>
+                                <th>Nhân sự</th>
+                                <th>Thời gian chốt</th>
+                                <th class="text-center">Thời lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(!Model.TaskDetails.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Không có công việc nào thoả mãn bộ lọc.</td>
+                                </tr>
+                            }
+                            @foreach(var task in Model.TaskDetails)
+                            {
+                                <!-- Highlight if more than 24 hours -->
+                                <tr class="@(task.IsOver24Hours ? "table-danger" : "")">
+                                    <td class="ps-3">
+                                        <div class="fw-bold @(task.IsOver24Hours ? "text-danger" : "")">@task.TaskTitle</div>
+                                        <div class="small text-muted">Bắt đầu: @task.StartTime.ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div class="small text-muted">Kết thúc: @task.EndTime.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@task.AssignedStaffName</span>
+                                    </td>
+                                    <td>@task.EndTime.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-center">
+                                        <div style="font-size: 1.1em;" class="fw-bold @(task.IsOver24Hours ? "text-danger" : "text-success")">
+                                            @task.DurationHours h
+                                        </div>
+                                        @if(task.IsOver24Hours)
+                                        {
+                                            <span class="badge bg-danger mt-1"><i class="bi bi-exclamation-triangle"></i> Dài</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

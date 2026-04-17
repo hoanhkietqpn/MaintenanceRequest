@@ -1,0 +1,25 @@
+@model MaintenanceRequestApp.Models.RequestMaintenance
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Thành công";
+}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <div class="card shadow border-0 py-5 rounded-4">
+            <h1 class="text-success" style="font-size: 5rem;"><i class="bi bi-check-circle-fill"></i></h1>
+            <h3 class="fw-bold mt-3">Gửi Yêu Cầu Thành Công!</h3>
+            <h4 class="text-muted fs-5">Request Submitted Successfully!</h4>
+            
+            <p class="mt-4 fs-5 mb-1">Mã theo dõi / Tracking ID:</p>
+            <div class="bg-light p-3 rounded mx-auto border" style="width: fit-content;">
+                <code class="fs-4 fw-bold text-primary">@Model.Id</code>
+            </div>
+            
+            <p class="mt-4 px-4 text-muted">Vui lòng lưu lại đường dẫn bên dưới để kiểm tra tiến độ xử lý. / Please save the link below to check the processing status.</p>
+            <div class="mt-4">
+                <a href="/Request/Status/@Model.Id" class="btn btn-outline-primary btn-lg mt-2 fw-bold px-4"><i class="bi bi-search me-1"></i> Xem Trạng Thái / View Status</a>
+                <a href="/Request/Create" class="btn btn-primary btn-lg mt-2 ms-2 fw-bold px-4"><i class="bi bi-plus-lg me-1"></i> Tạo Yêu Cầu Mới / Create New</a>
+            </div>
+        </div>
+    </div>
+</div>

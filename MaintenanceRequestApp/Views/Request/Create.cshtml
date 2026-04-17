@@ -1,0 +1,77 @@
+@model MaintenanceRequestApp.Models.RequestMaintenance
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Tạo Yêu Cầu";
+}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0 fw-bold">Yêu Cầu Bảo Trì / Maintenance Request</h4>
+            </div>
+            <div class="card-body p-4">
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Họ và tên / Full Name <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên / Enter your full name" required />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="example@domain.com" required />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Thiết bị hư hỏng / Damaged Equipment <span class="text-danger">*</span></label>
+                        <input asp-for="EquipmentDamged" class="form-control" placeholder="Tên thiết bị / Equipment name" required />
+                        <span asp-validation-for="EquipmentDamged" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Vị trí / Location <span class="text-danger">*</span></label>
+                        <input asp-for="Location" class="form-control" placeholder="Vị trí thiết bị (Tòa nhà, Phòng) / Building, Room" required />
+                        <span asp-validation-for="Location" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mức độ ưu tiên / Urgency <span class="text-danger">*</span></label>
+                        <select asp-for="Urgency" class="form-select" required>
+                            <option value="">-- Chọn / Select --</option>
+                            <option value="Thấp / Low">Thấp / Low</option>
+                            <option value="Trung bình / Medium">Trung bình / Medium</option>
+                            <option value="Cao / High">Cao / High</option>
+                            <option value="Khẩn cấp / Critical">Khẩn cấp / Critical</option>
+                        </select>
+                        <span asp-validation-for="Urgency" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả chi tiết / Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Mô tả sự cố / Describe the issue" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Đính kèm hình ảnh / Attachments</label>
+                        <input type="file" name="uploadedImages" class="form-control" multiple accept="image/jpeg, image/png, image/jpg" />
+                        <small class="text-muted d-block mt-1">Tối đa 3 hình, kích thước &lt; 20MB. Chỉ duyệt JPG, PNG. / Max 3 images, &lt; 20MB. Only JPG, PNG.</small>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold"><i class="bi bi-send me-1"></i> Gửi Yêu Cầu / Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
