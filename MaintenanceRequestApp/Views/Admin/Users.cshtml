@@ -1,6 +1,23 @@
 @model MaintenanceRequestApp.ViewModels.UserListViewModel
 @{
     ViewData["Title"] = "Quản lý Người dùng";
+
+    // ── Role Display Formatter ──
+    string FriendlyRole(string? role) => role switch
+    {
+        "Admin"           => "Quản trị viên (Admin)",
+        "QuanLyKyThuat"   => "Quản lý Kỹ thuật",
+        "NhanVienKyThuat" => "Nhân viên Kỹ thuật",
+        _                 => role ?? "Không xác định"
+    };
+
+    string RoleBadgeClass(string? role) => role switch
+    {
+        "Admin"           => "bg-danger",
+        "QuanLyKyThuat"   => "bg-primary",
+        "NhanVienKyThuat" => "bg-vjaa",
+        _                 => "bg-secondary"
+    };
 }
 
 <div class="card shadow-sm border-0 mb-4">
@@ -40,28 +57,19 @@
                         <tr>
                             <td class="fw-bold">@item.Username</td>
                             <td>@item.FirstName @item.LastName</td>
-                            <td>@item.Email</td>
+                            <td class="small text-muted">@item.Email</td>
                             <td>
-                                @if(item.Role == "Admin")
-                                {
-                                    <span class="badge bg-danger">Admin</span>
-                                }
-                                else if(item.Role == "QuanLyKyThuat")
-                                {
-                                    <span class="badge bg-primary">Trưởng nhóm</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Nhân viên</span>
-                                }
+                                <span class="badge @RoleBadgeClass(item.Role)">
+                                    @FriendlyRole(item.Role)
+                                </span>
                             </td>
                             <td class="text-end">
                                 <form method="post" action="/Admin/ChangeRole" class="d-flex justify-content-end gap-1">
                                     <input type="hidden" name="userId" value="@item.UserId" />
                                     <select class="form-select form-select-sm w-auto" name="newRole">
-                                        <option value="Admin" selected="@(item.Role == "Admin")">Admin</option>
-                                        <option value="QuanLyKyThuat" selected="@(item.Role == "QuanLyKyThuat")">Trưởng nhóm</option>
-                                        <option value="NhanVienKyThuat" selected="@(item.Role == "NhanVienKyThuat")">Nhân viên</option>
+                                        <option value="Admin"           selected="@(item.Role == "Admin")">Quản trị viên (Admin)</option>
+                                        <option value="QuanLyKyThuat"   selected="@(item.Role == "QuanLyKyThuat")">Quản lý Kỹ thuật</option>
+                                        <option value="NhanVienKyThuat" selected="@(item.Role == "NhanVienKyThuat")">Nhân viên Kỹ thuật</option>
                                     </select>
                                     <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Lưu</button>
                                 </form>

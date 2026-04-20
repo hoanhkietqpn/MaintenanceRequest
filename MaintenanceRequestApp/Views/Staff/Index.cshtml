@@ -66,8 +66,10 @@
                                 <input type="file" name="imageFile" class="form-control form-control-sm" accept="image/jpeg, image/png, image/jpg" />
                             </div>
                             <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" name="notifyManager" value="true" checked id="notify-@item.Id">
-                                <label class="form-check-label small" for="notify-@item.Id">Gửi Email tới Quản lý</label>
+                                <input class="form-check-input" type="checkbox" name="sendEmail" value="true" checked id="notify-@item.Id">
+                                <label class="form-check-label small" for="notify-@item.Id">
+                                    <i class="bi bi-envelope me-1 text-warning"></i>Gửi Email tới Quản lý
+                                </label>
                             </div>
                             <button type="submit" class="btn btn-vjaa w-100"><i class="bi bi-send me-1"></i> Gửi Báo cáo</button>
                         </form>

@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - App Quản Lý Sự Cố</title>
+    <title>@ViewData["Title"] - Quản Lý Bảo Trì VIAA</title>
+    <link rel="icon" type="image/png" href="~/images/icon.png" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -139,6 +140,25 @@
     </style>
 </head>
 <body>
+@{
+    // ── Role Display Formatter ──
+    var rawRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    var friendlyRole = rawRole switch
+    {
+        "Admin"            => "Quản trị viên (Admin)",
+        "QuanLyKyThuat"    => "Quản lý Kỹ thuật",
+        "NhanVienKyThuat"  => "Nhân viên Kỹ thuật",
+        _                  => rawRole
+    };
+    var roleColorClass = rawRole switch
+    {
+        "Admin"            => "bg-danger",
+        "QuanLyKyThuat"    => "bg-primary",
+        "NhanVienKyThuat"  => "bg-vjaa",
+        _                  => "bg-secondary"
+    };
+}
+
     <!-- Sidebar Overlay (mobile backdrop) -->
     <div id="sidebar-overlay"></div>
 
@@ -146,19 +166,26 @@
 
         <!-- ══ SIDEBAR ══ -->
         <div id="sidebar" class="text-white shadow-sm">
-            <div class="p-3 bg-vjaa text-center fw-bold text-white d-flex align-items-center justify-content-between">
-                <span><i class="bi bi-tools me-1"></i> BẢO TRÌ VIAA</span>
-                <!-- Close button inside sidebar (mobile) -->
-                <button id="sidebar-close" class="btn btn-sm btn-link text-white p-0 d-lg-none" title="Đóng menu">
+            <!-- Sidebar Header: Logo -->
+            <div class="px-3 py-2 bg-white d-flex align-items-center justify-content-between border-bottom">
+                <img src="~/images/LOGO_VJ_VIAA.png"
+                     alt="VIAA Logo"
+                     style="height:42px;object-fit:contain;max-width:180px;"
+                     class="d-inline-block" />
+                <!-- Close button (mobile) -->
+                <button id="sidebar-close" class="btn btn-sm btn-link text-muted p-0 d-lg-none" title="Đóng menu">
                     <i class="bi bi-x-lg fs-5"></i>
                 </button>
             </div>
             <div class="p-3">
-                <p class="small text-uppercase mb-1 text-muted fw-bold">Xin chào,</p>
-                <p class="text-white fw-bold mb-1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@User.Identity!.Name</p>
-                <span class="badge bg-vjaa mb-3">@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                <!-- User greeting -->
+                <p class="small text-uppercase mb-1 fw-bold text-white opacity-60 mb-0">Xin chào,</p>
+                <p class="text-white fw-bold mb-1 fs-6" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <i class="bi bi-person-circle me-1 opacity-75"></i>@User.Identity!.Name
+                </p>
+                <span class="badge @roleColorClass mb-3 px-2 py-1" style="font-size:0.72rem;">@friendlyRole</span>
 
-                <h6 class="text-uppercase text-muted small mt-2 fw-bold">Menu</h6>
+                <h6 class="text-uppercase text-white small mt-2 fw-bold opacity-75">Menu</h6>
                 <nav class="nav flex-column">
                     @if(User.IsInRole("Admin"))
                     {
@@ -188,13 +215,18 @@
         <!-- ══ MAIN CONTENT ══ -->
         <div id="main-content">
             <!-- Navbar -->
-            <nav id="main-navbar" class="navbar navbar-light bg-white border-bottom shadow-sm px-3 px-md-4 py-2">
+            <nav id="main-navbar" class="navbar navbar-light bg-white border-bottom shadow-sm px-3 px-md-4 py-2 d-flex align-items-center gap-2">
                 <!-- Hamburger toggle -->
                 <button id="sidebar-toggle" title="Đóng/Mở menu">
                     <i class="bi bi-list"></i>
                 </button>
-                <h5 class="mb-0 fw-bold text-dark ms-3 flex-grow-1">@ViewData["Title"]</h5>
-                <!-- Optional: breadcrumb khu vực phải -->
+                <!-- Page title -->
+                <h6 class="mb-0 fw-bold text-dark flex-grow-1 text-truncate ms-1">@ViewData["Title"]</h6>
+                <!-- User info (right side) -->
+                <div class="d-none d-md-flex align-items-center gap-2">
+                    <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>@User.Identity!.Name</span>
+                    <span class="badge @roleColorClass" style="font-size:0.7rem;">@friendlyRole</span>
+                </div>
             </nav>
 
             <!-- Page Body -->
