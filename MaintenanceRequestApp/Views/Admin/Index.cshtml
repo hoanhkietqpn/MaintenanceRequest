@@ -73,15 +73,20 @@
                             <td>
                                 @if(item.Assignments != null && item.Assignments.Any())
                                 {
+                                    <div class="d-flex flex-wrap gap-1">
                                     @foreach(var a in item.Assignments)
                                     {
-                                        <span class="badge bg-light text-dark border">@a.UserId</span>
+                                        <span class="badge bg-info">@(a.User?.FirstName + " " + a.User?.LastName)</span>
                                     }
+                                    </div>
                                 }
                                 else { <span class="text-muted small">Chưa phân công</span> }
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details", "Admin", new { id = item.Id })" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     @if(item.Status == 1)
                                     {
                                         <form asp-action="Approve" method="post">
@@ -117,13 +122,24 @@
                                             <input type="hidden" name="requestId" value="@item.Id" />
                                             <div class="mb-3">
                                                 <label class="form-label">Chọn nhân sự</label>
-                                                <select name="userId" class="form-select" required>
-                                                    <option value="">-- Chọn nhân viên --</option>
+                                                <select name="selectedStaffIds" class="form-select form-select-sm select2-staff" multiple="multiple" style="width: 100%;" required>
                                                     @foreach(var staff in ViewBag.Staffs)
                                                     {
-                                                        <option value="@staff.UserId">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                        var isSelected = item.Assignments != null && item.Assignments.Any(a => a.UserId == staff.UserId);
+                                                        if (isSelected) 
+                                                        {
+                                                            <option value="@staff.UserId" selected="selected">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                        }
+                                                        else 
+                                                        {
+                                                            <option value="@staff.UserId">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                        }
                                                     }
                                                 </select>
+                                            </div>
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" name="notifyEmail" value="true" id="mail-admin-@item.Id">
+                                                <label class="form-check-label small" for="mail-admin-@item.Id">Gửi Email thông báo</label>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -140,18 +156,39 @@
         </div>
 
         <!-- Pagination -->
-        @if (Model.TotalPages > 1)
+        @if (Model.Requests.TotalPages > 1)
         {
+            var prevDisabled = !Model.Requests.HasPreviousPage ? "disabled" : "";
+            var nextDisabled = !Model.Requests.HasNextPage ? "disabled" : "";
+
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination pagination-sm justify-content-center">
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                            <a class="page-link" href="@Url.Action("Index", new { page = i, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">@i</a>
-                        </li>
-                    }
+                    <li class="page-item @prevDisabled">
+                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex - 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang trước</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link">Trang @Model.Requests.PageIndex / @Model.Requests.TotalPages</a>
+                    </li>
+                    <li class="page-item @nextDisabled">
+                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex + 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang sau</a>
+                    </li>
                 </ul>
             </nav>
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.select2-staff').each(function () {
+                var modalId = $(this).closest('.modal').attr('id');
+                $(this).select2({
+                    dropdownParent: $('#' + modalId),
+                    placeholder: "Tìm kiếm & chọn nhiều nhân viên...",
+                    allowClear: true
+                });
+            });
+        });
+    </script>
+}

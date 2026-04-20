@@ -30,9 +30,8 @@ namespace MaintenanceRequestApp.Models
         [StringLength(200, ErrorMessage = "Vị trí không được vượt quá 200 ký tự.")]
         public string Location { get; set; }
 
-        [Required(ErrorMessage = "Độ ưu tiên không được để trống.")]
         [StringLength(200)]
-        public string Urgency { get; set; }
+        public string? Urgency { get; set; }
 
         [Required]
         public int Status { get; set; } = 1; // 1: Khởi tạo, 2: Đã Phê duyệt, 3: Đang sửa chữa, 4: Hoàn thành, 5: Hủy
@@ -44,9 +43,9 @@ namespace MaintenanceRequestApp.Models
         public DateTime? EndTime { get; set; }
 
         // Navigation Properties
-        public ICollection<RequestMedia> Medias { get; set; }
-        public ICollection<RequestAssignment> Assignments { get; set; }
-        public ICollection<AuditLog> AuditLogs { get; set; }
-        public ICollection<MaintenanceNote> MaintenanceNotes { get; set; }
+        public ICollection<RequestMedia>? Medias { get; set; }
+        public ICollection<RequestAssignment>? Assignments { get; set; }
+        public ICollection<AuditLog>? AuditLogs { get; set; }
+        public ICollection<MaintenanceNote>? MaintenanceNotes { get; set; }
     }
 }

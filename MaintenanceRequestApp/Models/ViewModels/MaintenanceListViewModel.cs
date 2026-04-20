@@ -1,22 +1,16 @@
 using System;
-using System.Collections.Generic;
 using MaintenanceRequestApp.Models;
+using MaintenanceRequestApp.Helpers;
 
 namespace MaintenanceRequestApp.ViewModels
 {
     public class MaintenanceListViewModel
     {
-        public IEnumerable<RequestMaintenance> Requests { get; set; } = new List<RequestMaintenance>();
+        public PaginatedList<RequestMaintenance> Requests { get; set; }
         
         // Filter parameters
         public int? Status { get; set; }
         public string SearchTerm { get; set; }
         public string StaffId { get; set; }
-        
-        // Pagination
-        public int CurrentPage { get; set; } = 1;
-        public int TotalPages { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
-        public int TotalCount { get; set; }
     }
 }

@@ -1,0 +1,449 @@
+@model MaintenanceRequestApp.Models.RequestMaintenance
+@{
+    ViewData["Title"] = "Chi tiết Phiếu Bảo trì";
+    var staffList = ViewBag.Staffs as IEnumerable<MaintenanceRequestApp.Models.User> ?? Enumerable.Empty<MaintenanceRequestApp.Models.User>();
+
+    string statusLabel = Model.Status switch
+    {
+        1 => "Khởi tạo",
+        2 => "Đã Phê duyệt",
+        3 => "Đang sửa chữa",
+        4 => "Hoàn thành",
+        5 => "Đã Hủy",
+        _ => "Không xác định"
+    };
+    string statusClass = Model.Status switch
+    {
+        1 => "bg-secondary",
+        2 => "bg-info",
+        3 => "bg-warning text-dark",
+        4 => "bg-success",
+        5 => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+}
+
+<!-- Toast Notification -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        <div id="liveToast" class="toast align-items-center text-white bg-success border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold">@TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-2 text-vjaa"></i>Chi tiết Phiếu Bảo trì</h5>
+        <small class="text-muted">Mã phiếu: <code>@Model.Id</code></small>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge @statusClass fs-6 px-3 py-2">@statusLabel</span>
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Trở về</a>
+    </div>
+</div>
+
+<!-- TWO COLUMN LAYOUT -->
+<div class="row g-3">
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- LEFT COLUMN (Main Content)                         -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="col-12 col-lg-8 mb-4">
+
+        <!-- SECTION A: Thông tin chung -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-vjaa text-white fw-bold py-2">
+                <i class="bi bi-info-circle me-2"></i>A. Thông tin chung
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="text-muted small text-uppercase fw-bold">Thiết bị hư hỏng</label>
+                        <div class="fw-bold fs-6">@Model.EquipmentDamged</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small text-uppercase fw-bold">Vị trí</label>
+                        <div><i class="bi bi-geo-alt text-danger me-1"></i>@Model.Location</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small text-uppercase fw-bold">Người báo cáo</label>
+                        <div>@Model.FullName <span class="text-muted">— @Model.Email</span></div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small text-uppercase fw-bold">Mức độ khẩn cấp</label>
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.Urgency) && Model.Urgency != "Không xác định / Not specified")
+                            { <span class="badge bg-orange text-dark border border-warning">@Model.Urgency</span> }
+                            else { <span class="text-muted small">Không xác định</span> }
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="text-muted small text-uppercase fw-bold">Mô tả sự cố</label>
+                        <div class="border rounded p-3 bg-light small">@Model.Description</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="text-muted small text-uppercase fw-bold">Ngày tạo</label>
+                        <div>@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="text-muted small text-uppercase fw-bold">Bắt đầu sửa</label>
+                        <div>@(Model.StartTime.HasValue ? Model.StartTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="text-muted small text-uppercase fw-bold">Hoàn thành</label>
+                        <div class="@(Model.EndTime.HasValue ? "text-success fw-bold" : "")">
+                            @(Model.EndTime.HasValue ? Model.EndTime.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.Assignments != null && Model.Assignments.Any())
+                {
+                    <hr class="my-3" />
+                    <label class="text-muted small text-uppercase fw-bold">Nhân viên phụ trách</label>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        @foreach (var a in Model.Assignments)
+                        {
+                            <span class="badge bg-info fs-6"><i class="bi bi-person me-1"></i>@(a.User?.FirstName + " " + a.User?.LastName)</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- SECTION B: Hình ảnh gốc -->
+        @if (Model.Medias != null && Model.Medias.Any())
+        {
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold border-bottom">
+                    <i class="bi bi-images me-2 text-primary"></i>B. Hình ảnh báo cáo lỗi
+                    <span class="badge bg-primary ms-2">@Model.Medias.Count ảnh</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        @foreach (var media in Model.Medias)
+                        {
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#imgModal-@media.MediaId">
+                                    <img src="@media.FilePath" class="img-fluid rounded border" style="width:100%;height:110px;object-fit:cover;" alt="Ảnh lỗi" />
+                                </a>
+                            </div>
+                            <div class="modal fade" id="imgModal-@media.MediaId" tabindex="-1">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content bg-dark border-0">
+                                        <div class="modal-header border-0 pb-0">
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body text-center p-2">
+                                            <img src="@media.FilePath" class="img-fluid rounded" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- SECTION C: Timeline Báo cáo tiến độ -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white fw-bold border-bottom">
+                <i class="bi bi-chat-left-text me-2 text-vjaa"></i>C. Lịch sử xử lý &amp; Báo cáo
+                @if (Model.MaintenanceNotes != null)
+                { <span class="badge bg-vjaa ms-2">@Model.MaintenanceNotes.Count ghi chú</span> }
+            </div>
+            <div class="card-body">
+                @if (Model.MaintenanceNotes == null || !Model.MaintenanceNotes.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-chat-square-dots fs-3 d-block mb-2"></i>
+                        Chưa có báo cáo hoặc ghi chú nào.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var note in Model.MaintenanceNotes.OrderBy(n => n.CreatedAt))
+                    {
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="rounded-circle bg-vjaa text-white d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="card border-0 shadow-sm timeline-card">
+                                    <div class="card-header bg-light d-flex justify-content-between py-2">
+                                        <span class="fw-bold small">
+                                            @if (note.User != null)
+                                            {
+                                                @(note.User.FirstName + " " + note.User.LastName)
+                                                <span class="badge bg-secondary fw-normal ms-1">@note.User.Role</span>
+                                            }
+                                            else { <span class="text-muted">Hệ thống</span> }
+                                        </span>
+                                        <small class="text-muted"><i class="bi bi-clock me-1"></i>@note.CreatedAt.ToLocalTime().ToString("HH:mm dd/MM/yyyy")</small>
+                                    </div>
+                                    <div class="card-body py-2">
+                                        <p class="mb-1">@note.NoteContent</p>
+                                        @if (!string.IsNullOrEmpty(note.ImagePath))
+                                        {
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#noteImg-@note.NoteId">
+                                                <img src="@note.ImagePath" class="img-fluid rounded border mt-2" style="max-height:180px;object-fit:cover;" />
+                                            </a>
+                                            <div class="modal fade" id="noteImg-@note.NoteId" tabindex="-1">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                    <div class="modal-content bg-dark border-0">
+                                                        <div class="modal-header border-0 pb-0">
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body text-center p-2">
+                                                            <img src="@note.ImagePath" class="img-fluid rounded" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- SECTION D: Audit Log (Accordion) -->
+        <div class="accordion mb-4" id="auditAccordion">
+            <div class="accordion-item shadow-sm border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#auditSection">
+                        <i class="bi bi-journal-code me-2 text-secondary"></i>D. Nhật ký hệ thống
+                        @if (Model.AuditLogs != null)
+                        { <span class="badge bg-secondary ms-2">@Model.AuditLogs.Count sự kiện</span> }
+                    </button>
+                </h2>
+                <div id="auditSection" class="accordion-collapse collapse">
+                    <div class="accordion-body p-0">
+                        @if (Model.AuditLogs == null || !Model.AuditLogs.Any())
+                        { <div class="text-center py-3 text-muted small">Chưa có nhật ký nào.</div> }
+                        else
+                        {
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="width:160px">Thời gian</th>
+                                        <th style="width:160px">Thực hiện bởi</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in Model.AuditLogs)
+                                    {
+                                        <tr>
+                                            <td class="small text-muted">@log.Timestamp.ToLocalTime().ToString("HH:mm dd/MM/yyyy")</td>
+                                            <td class="small">@(log.UserId ?? "Hệ thống")</td>
+                                            <td class="small">@log.Action</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /col-lg-8 -->
+
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- RIGHT COLUMN (Action Panel - Sticky on Desktop)    -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="col-12 col-lg-4">
+        <div class="sticky-top" style="top: 20px;">
+
+            <!-- ── APPROVE: Admin + Status==1 ── -->
+            @if (User.IsInRole("Admin") && Model.Status == 1)
+            {
+                <div class="card shadow border-0 mb-3 border-start border-success border-3">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-patch-check me-2 text-success"></i>Phê duyệt yêu cầu
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Xác nhận yêu cầu này hợp lệ và chuyển sang trạng thái <strong>Đã Phê duyệt</strong> để tiến hành điều phối.</p>
+                        <form asp-controller="Admin" asp-action="Approve" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success w-100 fw-bold"
+                                    onclick="return confirm('Xác nhận phê duyệt yêu cầu này?')">
+                                <i class="bi bi-check-circle me-2"></i>PHÊ DUYỆT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- ── ASSIGN: Admin hoặc Manager + Status==2 or 3 ── -->
+            @if ((User.IsInRole("Admin") || User.IsInRole("QuanLyKyThuat")) && (Model.Status == 2 || Model.Status == 3))
+            {
+                var controller = User.IsInRole("Admin") ? "Admin" : "Manager";
+                <div class="card shadow border-0 mb-3 border-start border-primary border-3">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-person-fill-add me-2 text-primary"></i>Điều phối nhân viên
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="@controller" asp-action="Assign" method="post">
+                            <input type="hidden" name="requestId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Chọn nhân viên phụ trách</label>
+                                <select name="selectedStaffIds" class="form-select select2-assign" multiple="multiple" style="width:100%;" required>
+                                    @foreach (var staff in staffList)
+                                    {
+                                        var isSelected = Model.Assignments != null && Model.Assignments.Any(a => a.UserId == staff.UserId);
+                                        if (isSelected)
+                                        { <option value="@staff.UserId" selected="selected">@staff.FirstName @staff.LastName (@staff.Username)</option> }
+                                        else
+                                        { <option value="@staff.UserId">@staff.FirstName @staff.LastName (@staff.Username)</option> }
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="notifyEmail" value="true" id="notifyEmail" checked>
+                                <label class="form-check-label small" for="notifyEmail">Gửi Email thông báo</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                <i class="bi bi-send me-2"></i>Lưu Điều phối
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- ── ADD NOTE: Admin hoặc Manager + Status==3 ── -->
+            @if ((User.IsInRole("Admin") || User.IsInRole("QuanLyKyThuat")) && Model.Status == 3)
+            {
+                var noteController = User.IsInRole("Admin") ? "Admin" : "Manager";
+                <div class="card shadow border-0 mb-3 border-start border-warning border-3">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-journal-text me-2 text-warning"></i>Thêm Ghi chú / Chỉ đạo
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="@noteController" asp-action="AddNote" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="requestId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <textarea name="noteContent" class="form-control" rows="3" placeholder="Nhập nội dung ghi chú..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted"><i class="bi bi-image me-1"></i>Đính kèm ảnh (WebP, tối đa 3MB)</label>
+                                <input type="file" name="imageFile" class="form-control form-control-sm" accept="image/jpeg,image/png,image/jpg,image/webp" />
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="sendEmail" value="true" id="sendEmailMgr" checked>
+                                <label class="form-check-label small" for="sendEmailMgr">
+                                    <i class="bi bi-envelope me-1 text-warning"></i>Gửi Email thông báo nhân viên
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">
+                                <i class="bi bi-floppy me-2"></i>Lưu Ghi chú
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            @* Admin: AddNote cho trang Admin chi tiết *@
+            @if (User.IsInRole("Admin") && Model.Status != 3)
+            {
+                <div class="card shadow border-0 mb-3 border-start border-secondary border-3">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-journal-text me-2 text-secondary"></i>Thêm Ghi chú
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="Admin" asp-action="AddNote" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="requestId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <textarea name="noteContent" class="form-control" rows="3" placeholder="Nhập nội dung ghi chú..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <input type="file" name="imageFile" class="form-control form-control-sm" accept="image/jpeg,image/png,image/jpg,image/webp" />
+                            </div>
+                            <button type="submit" class="btn btn-secondary w-100 fw-bold">
+                                <i class="bi bi-floppy me-2"></i>Lưu Ghi chú
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- ── COMPLETE / CLOSE: Manager hoặc Admin + Status==3 ── -->
+            @if ((User.IsInRole("Admin") || User.IsInRole("QuanLyKyThuat")) && Model.Status == 3)
+            {
+                var closeController = User.IsInRole("Admin") ? "Admin" : "Manager";
+                <div class="card shadow border-0 mb-3 border-start border-success border-3">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="bi bi-flag-fill me-2 text-success"></i>Hoàn thành nhiệm vụ
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Đánh dấu yêu cầu này đã được xử lý xong và chuyển sang trạng thái <strong class="text-success">Hoàn thành</strong>.</p>
+                        <form asp-controller="@closeController" asp-action="Close" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success w-100 fw-bold"
+                                    onclick="return confirm('Xác nhận hoàn thành nhiệm vụ này?')">
+                                <i class="bi bi-check2-all me-2"></i>XÁC NHẬN HOÀN THÀNH
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- ── DONE STATE: Hiển thị khi đã hoàn thành ── -->
+            @if (Model.Status == 4)
+            {
+                <div class="card shadow border-0 mb-3 bg-success text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-patch-check-fill fs-1 d-block mb-2"></i>
+                        <div class="fw-bold fs-5">Nhiệm vụ Hoàn thành</div>
+                        @if (Model.EndTime.HasValue)
+                        { <small class="opacity-75">@Model.EndTime.Value.ToLocalTime().ToString("HH:mm dd/MM/yyyy")</small> }
+                    </div>
+                </div>
+            }
+
+        </div><!-- /sticky-top -->
+    </div><!-- /col-lg-4 -->
+
+</div><!-- /row -->
+
+<style>
+    .bg-vjaa { background-color: #90c740 !important; }
+    .text-vjaa { color: #90c740 !important; }
+    .btn-vjaa { background-color: #90c740; border-color: #90c740; color: white; }
+    .timeline-card { border-left: 3px solid #90c740 !important; }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Init Select2 Assign dropdown
+            $('.select2-assign').select2({
+                placeholder: "Tìm kiếm & chọn nhiều nhân viên...",
+                allowClear: true
+            });
+
+            // Auto-hide toast
+            var toast = document.getElementById('liveToast');
+            if (toast) {
+                setTimeout(function () {
+                    var bsToast = bootstrap.Toast.getOrCreateInstance(toast);
+                    bsToast.hide();
+                }, 4000);
+            }
+        });
+    </script>
+}

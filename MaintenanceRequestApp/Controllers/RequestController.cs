@@ -46,6 +46,12 @@ namespace MaintenanceRequestApp.Controllers
                     model.Id = Guid.NewGuid();
                     model.CreatedAt = DateTime.UtcNow;
                     model.Status = 1; // Khởi tạo
+                    
+                    // Xử lý giá trị null cho DB constraint
+                    if (string.IsNullOrEmpty(model.Urgency)) 
+                    {
+                        model.Urgency = "Không xác định / Not specified";
+                    }
 
                     // Process images
                     if (uploadedImages != null && uploadedImages.Count > 0)
@@ -77,6 +83,7 @@ namespace MaintenanceRequestApp.Controllers
                     _context.AuditLogs.Add(new AuditLog
                     {
                         RequestId = model.Id,
+                        UserId = "Khách (System)", // Mặc định do khách ngoài gửi vào
                         Action = "Khởi tạo yêu cầu",
                         Timestamp = DateTime.UtcNow
                     });

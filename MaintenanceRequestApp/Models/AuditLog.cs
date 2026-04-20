@@ -13,7 +13,7 @@ namespace MaintenanceRequestApp.Models
         public Guid RequestId { get; set; }
 
         [ForeignKey("RequestId")]
-        public RequestMaintenance RequestMaintenance { get; set; }
+        public RequestMaintenance? RequestMaintenance { get; set; }
 
         public string UserId { get; set; }
 

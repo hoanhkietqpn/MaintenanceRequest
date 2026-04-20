@@ -1,16 +1,44 @@
-@model IEnumerable<MaintenanceRequestApp.Models.RequestMaintenance>
+@model MaintenanceRequestApp.ViewModels.MaintenanceListViewModel
 @{
     ViewData["Title"] = "Nhiệm vụ của tôi";
 }
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Trạng thái</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="2" selected="@(Model.Status == 2)">Đã Phê duyệt</option>
+                    <option value="3" selected="@(Model.Status == 3)">Đang sửa chữa</option>
+                    <option value="4" selected="@(Model.Status == 4)">Hoàn thành</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-bold">Tìm kiếm chung</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Tên thiết bị, Vị trí, Mô tả..." />
+                </div>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-vjaa w-100"><i class="bi bi-funnel me-1"></i> Lọc dữ liệu</button>
+                <a href="/Staff/Index" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-x-circle me-1"></i> Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="row">
-    @if(!Model.Any())
+    @if(!Model.Requests.Any())
     {
         <div class="col-12 text-center py-5">
             <h1 class="text-muted"><i class="bi bi-cup-hot"></i></h1>
-            <p class="text-muted">Bạn chưa có nhiệm vụ nào được phân công.</p>
+            <p class="text-muted">Bạn chưa có nhiệm vụ nào phù hợp với điều kiện tìm kiếm.</p>
         </div>
     }
-    @foreach(var item in Model)
+    @foreach(var item in Model.Requests)
     {
         <div class="col-md-6 mb-4">
             <div class="card shadow border-0 h-100">
@@ -45,7 +73,34 @@
                         </form>
                     }
                 </div>
+                <div class="card-footer bg-white border-0 pt-0">
+                    <a href="@Url.Action("Details", "Staff", new { id = item.Id })" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-eye me-1"></i>Xem Chi tiết Phiếu
+                    </a>
+                </div>
             </div>
         </div>
     }
 </div>
+
+@if (Model.Requests.TotalPages > 1)
+{
+    var prevDisabled = !Model.Requests.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.Requests.HasNextPage ? "disabled" : "";
+
+    <nav aria-label="Page navigation" class="mt-4 pb-4">
+        <ul class="pagination pagination-sm justify-content-center">
+            <li class="page-item @prevDisabled">
+                <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex - 1, status = Model.Status, searchTerm = Model.SearchTerm })">Trang trước</a>
+            </li>
+            
+            <li class="page-item disabled">
+                <a class="page-link">Trang @Model.Requests.PageIndex / @Model.Requests.TotalPages</a>
+            </li>
+
+            <li class="page-item @nextDisabled">
+                <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex + 1, status = Model.Status, searchTerm = Model.SearchTerm })">Trang sau</a>
+            </li>
+        </ul>
+    </nav>
+}

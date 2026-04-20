@@ -89,8 +89,16 @@ namespace MaintenanceRequestApp.Controllers
                             Role = role
                         };
                         _context.Users.Add(user);
-                        await _context.SaveChangesAsync();
                     }
+                    else
+                    {
+                        user.FirstName = dataElement.TryGetProperty("firstName", out var fn) ? fn.GetString() : user.FirstName;
+                        user.LastName = dataElement.TryGetProperty("lastName", out var ln) ? ln.GetString() : user.LastName;
+                        user.Email = dataElement.TryGetProperty("email", out var e) ? e.GetString() : user.Email;
+                        _context.Users.Update(user);
+                    }
+
+                    await _context.SaveChangesAsync();
 
                     await SetupClaimsAndSignInAsync(user);
 

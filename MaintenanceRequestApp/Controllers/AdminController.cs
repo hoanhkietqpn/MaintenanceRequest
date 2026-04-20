@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Linq;
 using System;
+using System.IO;
 using MaintenanceRequestApp.Models;
+using MaintenanceRequestApp.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using MaintenanceRequestApp.Hubs;
 
@@ -16,17 +19,24 @@ namespace MaintenanceRequestApp.Controllers
     {
         private readonly MaintenanceDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IEmailService _emailService;
+        private readonly IImageProcessingService _imageService;
+        private readonly IWebHostEnvironment _env;
 
-        public AdminController(MaintenanceDbContext context, IHubContext<NotificationHub> hubContext)
+        public AdminController(MaintenanceDbContext context, IHubContext<NotificationHub> hubContext, IEmailService emailService, IImageProcessingService imageService, IWebHostEnvironment env)
         {
             _context = context;
             _hubContext = hubContext;
+            _emailService = emailService;
+            _imageService = imageService;
+            _env = env;
         }
 
-        public async Task<IActionResult> Index(int? status, string searchTerm, string staffId, int page = 1)
+        public async Task<IActionResult> Index(int? status, string searchTerm, string staffId, int? pageNumber)
         {
             var query = _context.RequestMaintenances
                 .Include(r => r.Assignments)
+                .ThenInclude(a => a.User)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -53,12 +63,7 @@ namespace MaintenanceRequestApp.Controllers
             query = query.OrderByDescending(r => r.CreatedAt);
 
             int pageSize = 10;
-            int totalCount = await query.CountAsync();
-            int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-            if (page < 1) page = 1;
-            if (page > totalPages && totalPages > 0) page = totalPages;
-
-            var requests = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var requests = await MaintenanceRequestApp.Helpers.PaginatedList<RequestMaintenance>.CreateAsync(query, pageNumber ?? 1, pageSize);
 
             ViewBag.Staffs = await _context.Users.Where(u => u.Role == "NhanVienKyThuat" || u.Role == "QuanLyKyThuat").ToListAsync();
 
@@ -67,14 +72,37 @@ namespace MaintenanceRequestApp.Controllers
                 Requests = requests,
                 Status = status,
                 SearchTerm = searchTerm,
-                StaffId = staffId,
-                CurrentPage = page,
-                TotalPages = totalPages,
-                PageSize = pageSize,
-                TotalCount = totalCount
+                StaffId = staffId
             };
 
             return View(viewModel);
+        }
+
+        // ─────────────────────────────────────────────
+        // DETAILS (GET) — Interactive Workspace
+        // ─────────────────────────────────────────────
+        [HttpGet]
+        public async Task<IActionResult> Details(Guid id)
+        {
+            var request = await _context.RequestMaintenances
+                .Include(r => r.Medias)
+                .Include(r => r.Assignments)
+                    .ThenInclude(a => a.User)
+                .Include(r => r.MaintenanceNotes)
+                    .ThenInclude(n => n.User)
+                .Include(r => r.AuditLogs)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null) return NotFound();
+
+            if (request.AuditLogs != null)
+                request.AuditLogs = request.AuditLogs.OrderByDescending(l => l.Timestamp).ToList();
+
+            ViewBag.Staffs = await _context.Users
+                .Where(u => u.Role == "NhanVienKyThuat" || u.Role == "QuanLyKyThuat")
+                .ToListAsync();
+
+            return View("~/Views/Manager/Details.cshtml", request);
         }
 
         [HttpPost]
@@ -95,34 +123,63 @@ namespace MaintenanceRequestApp.Controllers
                 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "System", $"Yêu cầu {id} đã được phê duyệt.");
+                TempData["SuccessMessage"] = "✅ Yêu cầu đã được phê duyệt thành công!";
             }
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         [HttpPost]
-        public async Task<IActionResult> Assign(Guid requestId, string userId)
+        public async Task<IActionResult> Assign(Guid requestId, List<string> selectedStaffIds, bool notifyEmail)
         {
             var req = await _context.RequestMaintenances.FindAsync(requestId);
-            if (req != null)
+
+            if (req != null && selectedStaffIds != null && selectedStaffIds.Any())
             {
-                var assign = new RequestAssignment { RequestId = requestId, UserId = userId };
-                _context.RequestAssignments.Add(assign);
+                // 1. Remove existing RequestAssignment records
+                var existingAssignments = _context.RequestAssignments.Where(a => a.RequestId == requestId);
+                _context.RequestAssignments.RemoveRange(existingAssignments);
                 
+                var staffNames = new System.Collections.Generic.List<string>();
+
+                // 2. Iterate and insert new records
+                foreach (var staffId in selectedStaffIds)
+                {
+                    var user = await _context.Users.FindAsync(staffId);
+                    if (user != null)
+                    {
+                        var assign = new RequestAssignment { RequestId = requestId, UserId = staffId };
+                        _context.RequestAssignments.Add(assign);
+                        staffNames.Add($"{user.FirstName} {user.LastName}");
+
+                        if (notifyEmail && !string.IsNullOrEmpty(user.Email))
+                        {
+                            string link = Url.Action("Index", "Staff", null, Request.Scheme);
+                            await _emailService.SendEmailAsync(user.Email, "Bạn được phân công nhiệm vụ mới", 
+                                $"Hệ thống vừa phân công cho bạn xử lý sự cố {req.EquipmentDamged}. Vui lòng truy cập <a href='{link}'>đây</a> để xem chi tiết.");
+                        }
+
+                        await _hubContext.Clients.All.SendAsync("ReceiveMessage", "System", $"Đã điều phối công việc cho {user.Username}.");
+                    }
+                }
+                
+                // 3. Update Status and StartTime
                 if (req.Status < 3) req.Status = 3; // Đang sửa chữa
                 if (!req.StartTime.HasValue) req.StartTime = DateTime.UtcNow;
 
+                // 4. Audit Log
+                string namesStr = string.Join(", ", staffNames);
                 _context.AuditLogs.Add(new AuditLog
                 {
                     RequestId = requestId,
                     UserId = User.Identity.Name,
-                    Action = $"Đã điều phối cho nhân viên {userId}",
+                    Action = $"Admin đã điều phối cho các nhân viên: {namesStr}",
                     Timestamp = DateTime.UtcNow
                 });
                 
                 await _context.SaveChangesAsync();
-                await _hubContext.Clients.All.SendAsync("ReceiveMessage", "System", $"Yêu cầu {requestId} đã được điều phối.");
+                TempData["SuccessMessage"] = $"✅ Đã điều phối thành công cho: {namesStr}";
             }
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Details), new { id = requestId });
         }
 
         [HttpPost]
@@ -144,8 +201,88 @@ namespace MaintenanceRequestApp.Controllers
                 
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "System", $"Yêu cầu {id} đã hoàn thành.");
+                TempData["SuccessMessage"] = "✅ Nhiệm vụ đã được đánh dấu Hoàn thành!";
             }
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddNote(Guid requestId, string noteContent, IFormFile imageFile)
+        {
+            var req = await _context.RequestMaintenances.FindAsync(requestId);
+            if (req != null && !string.IsNullOrEmpty(noteContent))
+            {
+                var note = new MaintenanceNote
+                {
+                    RequestId = requestId,
+                    UserId = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                    NoteContent = noteContent,
+                    ImagePath = string.Empty,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "notes");
+                    Directory.CreateDirectory(uploadFolder);
+                    var fileName = await _imageService.ProcessAndSaveImageAsync(imageFile, uploadFolder);
+                    note.ImagePath = $"/uploads/notes/{fileName}";
+                }
+
+                _context.MaintenanceNotes.Add(note);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    RequestId = requestId,
+                    UserId = User.Identity!.Name,
+                    Action = "Admin thêm ghi chú",
+                    Timestamp = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "✅ Đã lưu ghi chú thành công!";
+            }
+            return RedirectToAction(nameof(Details), new { id = requestId });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Users(string searchTerm, int? pageNumber)
+        {
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var term = searchTerm.ToLower();
+                query = query.Where(u => 
+                    (u.Username != null && u.Username.ToLower().Contains(term)) ||
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(term)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(term))
+                );
+            }
+
+            query = query.OrderBy(u => u.Username);
+
+            int pageSize = 15;
+            var users = await MaintenanceRequestApp.Helpers.PaginatedList<User>.CreateAsync(query, pageNumber ?? 1, pageSize);
+
+            var viewModel = new MaintenanceRequestApp.ViewModels.UserListViewModel
+            {
+                Users = users,
+                SearchTerm = searchTerm
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangeRole(string userId, string newRole)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.Role = newRole;
+                await _context.SaveChangesAsync();
+                TempData["ToastMessage"] = "Cập nhật quyền thành công!";
+            }
+            return RedirectToAction("Users");
         }
     }
 }

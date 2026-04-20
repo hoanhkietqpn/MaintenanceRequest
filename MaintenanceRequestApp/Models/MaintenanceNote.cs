@@ -13,18 +13,17 @@ namespace MaintenanceRequestApp.Models
         public Guid RequestId { get; set; }
 
         [ForeignKey("RequestId")]
-        public RequestMaintenance RequestMaintenance { get; set; }
+        public RequestMaintenance? RequestMaintenance { get; set; }
 
-        [Required]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User? User { get; set; }
 
         [Required(ErrorMessage = "Nội dung ghi chú không được để trống.")]
         public string NoteContent { get; set; }
 
-        public string ImagePath { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
