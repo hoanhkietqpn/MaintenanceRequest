@@ -20,13 +20,15 @@ namespace MaintenanceRequestApp.Controllers
         private readonly IImageProcessingService _imageService;
         private readonly IWebHostEnvironment _env;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IConfiguration _configuration;
 
-        public RequestController(MaintenanceDbContext context, IImageProcessingService imageService, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext)
+        public RequestController(MaintenanceDbContext context, IImageProcessingService imageService, IWebHostEnvironment env, IHubContext<NotificationHub> hubContext, IConfiguration configuration)
         {
             _context = context;
             _imageService = imageService;
             _env = env;
             _hubContext = hubContext;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -62,7 +64,10 @@ namespace MaintenanceRequestApp.Controllers
                             return View(model);
                         }
 
-                        var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "requests");
+                        var baseUploadPath = _configuration["FileUploadSettings:PhysicalPath"] ?? Path.Combine(_env.WebRootPath, "uploads");
+                        if (!Path.IsPathRooted(baseUploadPath)) baseUploadPath = Path.Combine(_env.ContentRootPath, baseUploadPath);
+
+                        var uploadFolder = Path.Combine(baseUploadPath, "requests");
                         var savedFiles = await _imageService.ProcessAndSaveMultipleImagesAsync(uploadedImages, uploadFolder);
 
                         model.Medias = new List<RequestMedia>();

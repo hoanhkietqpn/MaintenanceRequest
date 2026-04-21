@@ -22,14 +22,16 @@ namespace MaintenanceRequestApp.Controllers
         private readonly IEmailService _emailService;
         private readonly IImageProcessingService _imageService;
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _configuration;
 
-        public AdminController(MaintenanceDbContext context, IHubContext<NotificationHub> hubContext, IEmailService emailService, IImageProcessingService imageService, IWebHostEnvironment env)
+        public AdminController(MaintenanceDbContext context, IHubContext<NotificationHub> hubContext, IEmailService emailService, IImageProcessingService imageService, IWebHostEnvironment env, IConfiguration configuration)
         {
             _context = context;
             _hubContext = hubContext;
             _emailService = emailService;
             _imageService = imageService;
             _env = env;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> Index(int? status, string searchTerm, string staffId, int? pageNumber)
@@ -223,7 +225,10 @@ namespace MaintenanceRequestApp.Controllers
 
                 if (imageFile != null && imageFile.Length > 0)
                 {
-                    var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "notes");
+                    var baseUploadPath = _configuration["FileUploadSettings:PhysicalPath"] ?? Path.Combine(_env.WebRootPath, "uploads");
+                    if (!Path.IsPathRooted(baseUploadPath)) baseUploadPath = Path.Combine(_env.ContentRootPath, baseUploadPath);
+
+                    var uploadFolder = Path.Combine(baseUploadPath, "notes");
                     Directory.CreateDirectory(uploadFolder);
                     var fileName = await _imageService.ProcessAndSaveImageAsync(imageFile, uploadFolder);
                     note.ImagePath = $"/uploads/notes/{fileName}";

@@ -25,8 +25,9 @@ namespace MaintenanceRequestApp.Controllers
         private readonly IEmailService _emailService;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<ManagerController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public ManagerController(MaintenanceDbContext context, IImageProcessingService imageService, IWebHostEnvironment env, IEmailService emailService, IHubContext<NotificationHub> hubContext, ILogger<ManagerController> logger)
+        public ManagerController(MaintenanceDbContext context, IImageProcessingService imageService, IWebHostEnvironment env, IEmailService emailService, IHubContext<NotificationHub> hubContext, ILogger<ManagerController> logger, IConfiguration configuration)
         {
             _context = context;
             _imageService = imageService;
@@ -34,6 +35,7 @@ namespace MaintenanceRequestApp.Controllers
             _emailService = emailService;
             _hubContext = hubContext;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // ─────────────────────────────────────────────
@@ -214,7 +216,10 @@ namespace MaintenanceRequestApp.Controllers
 
                 if (imageFile != null && imageFile.Length > 0)
                 {
-                    var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "notes");
+                    var baseUploadPath = _configuration["FileUploadSettings:PhysicalPath"] ?? Path.Combine(_env.WebRootPath, "uploads");
+                    if (!Path.IsPathRooted(baseUploadPath)) baseUploadPath = Path.Combine(_env.ContentRootPath, baseUploadPath);
+
+                    var uploadFolder = Path.Combine(baseUploadPath, "notes");
                     Directory.CreateDirectory(uploadFolder);
                     var fileName = await _imageService.ProcessAndSaveImageAsync(imageFile, uploadFolder);
                     note.ImagePath = $"/uploads/notes/{fileName}";

@@ -52,7 +52,32 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// 1. Default static files from wwwroot
 app.UseStaticFiles();
+
+// 2. Custom static files for external uploads
+var uploadSettings = builder.Configuration.GetSection("FileUploadSettings");
+var physicalPath = uploadSettings["PhysicalPath"] ?? "ExternalUploads";
+var webPath = uploadSettings["WebPath"] ?? "/uploads";
+
+// Ensure physical path is absolute
+if (!Path.IsPathRooted(physicalPath))
+{
+    physicalPath = Path.Combine(builder.Environment.ContentRootPath, physicalPath);
+}
+
+// Ensure directory exists
+if (!Directory.Exists(physicalPath))
+{
+    Directory.CreateDirectory(physicalPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(physicalPath),
+    RequestPath = webPath
+});
 
 app.UseRouting();
 
