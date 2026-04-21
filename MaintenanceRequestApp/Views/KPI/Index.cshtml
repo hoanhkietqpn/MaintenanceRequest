@@ -41,40 +41,91 @@
     </div>
 </div>
 
+<!-- 📊 Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-vjaa text-white">
+            <div class="card-body text-center py-4">
+                <div class="display-6 fw-bold mb-1">@Model.FormattedTeamTime</div>
+                <div class="text-uppercase small opacity-75 fw-bold">Tổng giờ toàn đội</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-info text-white">
+            <div class="card-body text-center py-4">
+                <div class="display-6 fw-bold mb-1 text-truncate px-2" title="@Model.TopStaffName">
+                    @(string.IsNullOrEmpty(Model.TopStaffName) ? "N/A" : Model.TopStaffName)
+                </div>
+                <div class="text-uppercase small opacity-75 fw-bold">Năng suất cao nhất</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-success text-white">
+            <div class="card-body text-center py-4">
+                <div class="display-6 fw-bold mb-1">@Model.TotalTasksCompleted</div>
+                <div class="text-uppercase small opacity-75 fw-bold">Tổng nhiệm vụ hoàn thành</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Tóm tắt KPI Nhân viên -->
-    <div class="col-md-4 mb-4">
+    <div class="col-md-5 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white border-bottom fw-bold text-dark">
-                <i class="bi bi-people-fill me-2 text-vjaa"></i> Tổng hợp Nhân sự
+                <i class="bi bi-people-fill me-2 text-vjaa"></i> Hiệu suất theo Nhân sự
             </div>
             <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    @if(!Model.StaffSummaries.Any())
-                    {
-                        <li class="list-group-item text-muted text-center py-4">Chưa có dữ liệu thống kê.</li>
-                    }
-                    @foreach(var summary in Model.StaffSummaries)
-                    {
-                        <li class="list-group-item d-flex justify-content-between align-items-center p-3">
-                            <div>
-                                <h6 class="mb-0 fw-bold">@summary.StaffName</h6>
-                                <small class="text-muted">Hoàn thành: @summary.TotalTasksCompleted nhiệm vụ</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-vjaa rounded-pill px-3 py-2">
-                                    @summary.AverageCompletionTimeHours h / task
-                                </span>
-                            </div>
-                        </li>
-                    }
-                </ul>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Nhân viên</th>
+                                <th class="text-center">Tổng giờ</th>
+                                <th class="text-center">TB / Task</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(!Model.StaffSummaries.Any())
+                            {
+                                <tr>
+                                    <td colspan="3" class="list-group-item text-muted text-center py-4">Chưa có dữ liệu thống kê.</td>
+                                </tr>
+                            }
+                            @foreach(var summary in Model.StaffSummaries)
+                            {
+                                var percentage = Model.TotalTeamHours > 0 ? (summary.TotalWorkHours / Model.TotalTeamHours) * 100 : 0;
+                                <tr>
+                                    <td class="ps-3 py-3">
+                                        <div class="fw-bold">@summary.StaffName</div>
+                                        <div class="small text-muted mb-1">Xong: @summary.TotalTasksCompleted tasks</div>
+                                        <div class="progress" style="height: 6px; width: 100px;">
+                                            <div class="progress-bar bg-vjaa" role="progressbar" style="width: @percentage.ToString("0")%" 
+                                                 aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-vjaa rounded-pill px-3 py-2 fs-6">
+                                            @summary.FormattedTotalTime
+                                        </span>
+                                    </td>
+                                    <td class="text-center text-muted small">
+                                        @summary.FormattedAverageTime
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Chi tiết Task -->
-    <div class="col-md-8 mb-4">
+    <div class="col-md-7 mb-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-white border-bottom fw-bold text-dark">
                 <i class="bi bi-list-check me-2 text-vjaa"></i> Lịch sử Công việc Kỹ thuật

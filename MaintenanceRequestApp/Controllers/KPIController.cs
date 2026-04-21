@@ -96,26 +96,39 @@ namespace MaintenanceRequestApp.Controllers
                             UserId = assign.UserId,
                             StaffName = $"{assign.User.FirstName} {assign.User.LastName}",
                             TotalTasksCompleted = 0,
+                            TotalWorkHours = 0,
                             AverageCompletionTimeHours = 0
                         };
                     }
 
                     var summary = staffSummaryDict[assign.UserId];
                     summary.TotalTasksCompleted++;
-                    summary.AverageCompletionTimeHours += duration;
+                    summary.TotalWorkHours += duration;
                 }
             }
 
-            // Calculate actual averages
+            // Calculate actual averages and team stats
+            vm.TotalTasksCompleted = requests.Count;
+            vm.TotalTeamHours = 0;
+            double maxHours = -1;
+
             foreach (var summary in staffSummaryDict.Values)
             {
+                vm.TotalTeamHours += summary.TotalWorkHours;
+                if (summary.TotalWorkHours > maxHours)
+                {
+                    maxHours = summary.TotalWorkHours;
+                    vm.TopStaffName = summary.StaffName;
+                }
+
                 if (summary.TotalTasksCompleted > 0)
                 {
-                    summary.AverageCompletionTimeHours = Math.Round(summary.AverageCompletionTimeHours / summary.TotalTasksCompleted, 2);
+                    summary.AverageCompletionTimeHours = Math.Round(summary.TotalWorkHours / summary.TotalTasksCompleted, 2);
+                    summary.TotalWorkHours = Math.Round(summary.TotalWorkHours, 1);
                 }
             }
 
-            vm.StaffSummaries = staffSummaryDict.Values.OrderByDescending(s => s.TotalTasksCompleted).ToList();
+            vm.StaffSummaries = staffSummaryDict.Values.OrderByDescending(s => s.TotalWorkHours).ToList();
             vm.TaskDetails = vm.TaskDetails.OrderByDescending(t => t.EndTime).ToList();
 
             return View(vm);
