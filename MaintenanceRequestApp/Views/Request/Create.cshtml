@@ -7,7 +7,7 @@
     <div class="col-md-8">
         <div class="card shadow-sm border-0 rounded-3">
             <div class="card-header bg-primary text-white text-center py-3">
-                <h4 class="mb-0 fw-bold">Yêu Cầu Bảo Trì / Maintenance Request</h4>
+                <h4 class="mb-0 fw-bold">PHIẾU ĐỀ NGHỊ SỬA CHỮA/ MAINTENANCE REQUEST FORM</h4>
             </div>
             <div class="card-body p-4">
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
@@ -49,55 +49,6 @@
                         <span asp-validation-for="Location" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-bold mb-3 d-block">
-                            Mức độ khẩn cấp / Urgency Level: 
-                            <span class="text-muted fst-italic fw-normal">(Tùy chọn / Optional)</span>
-                        </label>
-                        
-                        <div class="form-check mb-3 pe-2">
-                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency" id="urgency1" value="Level 1">
-                            <label class="form-check-label ms-2 pt-1" for="urgency1">
-                                CẤP 1 (Nhẹ, không gây gián đoạn nhưng ảnh hưởng đến chất lượng công việc)/ Level 1: Minor
-                            </label>
-                        </div>
-                        
-                        <div class="form-check mb-3 pe-2">
-                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency" id="urgency2" value="Level 2">
-                            <label class="form-check-label ms-2 pt-1" for="urgency2">
-                                CẤP 2 (Gây gián đoạn công việc dưới 30 phút/ hoặc có thể gây ra chấn thương hoặc có thể gây hư hỏng mức độ nhẹ)/ Level 2: Low
-                            </label>
-                        </div>
-                        
-                        <div class="form-check mb-3 pe-2">
-                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency" id="urgency3" value="Level 3">
-                            <label class="form-check-label ms-2 pt-1" for="urgency3">
-                                CẤP 3 (Gây gián đoạn trên 30 phút / hoặc gây chấn thương cần can thiệp của Y tế / hoặc gây thiệt hại tốn thời gian khắc phục, sửa chữa, thiệt hại đến 5 triệu)/ Level 3: Medium
-                            </label>
-                        </div>
-                        
-                        <div class="form-check mb-3 pe-2">
-                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency" id="urgency4" value="Level 4">
-                            <label class="form-check-label ms-2 pt-1" for="urgency4">
-                                CẤP 4 (Khiến ngừng công việc / hoặc gây tai nạn nghiêm trọng / hoặc gây thiệt hại trên 5 triệu)/ Level 4: High Risk
-                            </label>
-                        </div>
-                        
-                        <div class="form-check mb-2 pe-2">
-                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency" id="urgency5" value="Level 5">
-                            <label class="form-check-label ms-2 pt-1" for="urgency5">
-                                CẤP 5 (Gây nguy hiểm hoặc thiệt hại nghiêm trọng đến con người, tài sản hoặc cơ sở vật chất)/ Level 5: Danger
-                            </label>
-                        </div>
-
-                        <div class="text-end mt-1">
-                            <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted p-0" onclick="clearUrgencySelection()">
-                                Xóa lựa chọn (Clear selection)
-                            </button>
-                        </div>
-                        <span asp-validation-for="Urgency" class="text-danger small"></span>
-                    </div>
-
                     <div class="mb-3">
                         <label class="form-label fw-bold">Mô tả chi tiết / Description <span
                                 class="text-danger">*</span></label>
@@ -107,9 +58,70 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Đính kèm hình ảnh / Attachments</label>
+                        <label class="form-label fw-bold mb-3 d-block">
+                            Mức độ khẩn cấp / Urgency Level:
+                            <span class="text-muted fst-italic fw-normal">(Tùy chọn / Optional)</span>
+                        </label>
+
+                        <div class="form-check mb-3 pe-2">
+                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency"
+                                id="urgency1" value="Level 1">
+                            <label class="form-check-label ms-2 pt-1" for="urgency1">
+                                CẤP 1 (Nhẹ, không gây gián đoạn nhưng ảnh hưởng đến chất lượng công việc)/ Level 1:
+                                Minor
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3 pe-2">
+                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency"
+                                id="urgency2" value="Level 2">
+                            <label class="form-check-label ms-2 pt-1" for="urgency2">
+                                CẤP 2 (Gây gián đoạn công việc dưới 30 phút/ hoặc có thể gây ra chấn thương hoặc có thể
+                                gây hư hỏng mức độ nhẹ)/ Level 2: Low
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3 pe-2">
+                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency"
+                                id="urgency3" value="Level 3">
+                            <label class="form-check-label ms-2 pt-1" for="urgency3">
+                                CẤP 3 (Gây gián đoạn trên 30 phút / hoặc gây chấn thương cần can thiệp của Y tế / hoặc
+                                gây thiệt hại tốn thời gian khắc phục, sửa chữa, thiệt hại đến 5 triệu)/ Level 3: Medium
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3 pe-2">
+                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency"
+                                id="urgency4" value="Level 4">
+                            <label class="form-check-label ms-2 pt-1" for="urgency4">
+                                CẤP 4 (Khiến ngừng công việc / hoặc gây tai nạn nghiêm trọng / hoặc gây thiệt hại trên 5
+                                triệu)/ Level 4: High Risk
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-2 pe-2">
+                            <input class="form-check-input fs-4 mt-1 flex-shrink-0" type="radio" name="Urgency"
+                                id="urgency5" value="Level 5">
+                            <label class="form-check-label ms-2 pt-1" for="urgency5">
+                                CẤP 5 (Gây nguy hiểm hoặc thiệt hại nghiêm trọng đến con người, tài sản hoặc cơ sở vật
+                                chất)/ Level 5: Danger
+                            </label>
+                        </div>
+
+                        <div class="text-end mt-1">
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted p-0"
+                                onclick="clearUrgencySelection()">
+                                Xóa lựa chọn (Clear selection)
+                            </button>
+                        </div>
+                        <span asp-validation-for="Urgency" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Đính kèm hình ảnh / Attachments<span
+                                class="text-danger">*</span></label>
                         <input type="file" name="uploadedImages" class="form-control" multiple
-                            accept="image/jpeg, image/png, image/jpg" />
+                            accept="image/jpeg, image/png, image/jpg" required />
                         <small class="text-muted d-block mt-1">Tối đa 3 hình, kích thước &lt; 20MB. Chỉ duyệt JPG, PNG.
                             / Max 3 images, &lt; 20MB. Only JPG, PNG.</small>
                     </div>
