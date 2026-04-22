@@ -122,6 +122,9 @@ namespace MaintenanceRequestApp.Controllers
             var request = await _context.RequestMaintenances
                 .Include(r => r.Medias)
                 .Include(r => r.AuditLogs)
+                .Include(r => r.MaintenanceNotes)
+                .Include(r => r.Assignments!)
+                    .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (request == null)
@@ -130,6 +133,31 @@ namespace MaintenanceRequestApp.Controllers
             }
 
             return View(request);
+        }
+
+        [HttpGet]
+        public IActionResult Lookup()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Lookup(string requestId)
+        {
+            if (string.IsNullOrWhiteSpace(requestId) || !Guid.TryParse(requestId, out Guid parsedGuid))
+            {
+                ModelState.AddModelError("", "Mã yêu cầu không hợp lệ hoặc không tồn tại / Invalid or non-existent request ID.");
+                return View();
+            }
+
+            var request = await _context.RequestMaintenances.FindAsync(parsedGuid);
+            if (request == null)
+            {
+                ModelState.AddModelError("", "Không tìm thấy yêu cầu với mã này / Request not found.");
+                return View();
+            }
+
+            return RedirectToAction("Status", new { id = parsedGuid });
         }
     }
 }

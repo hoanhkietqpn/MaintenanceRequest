@@ -185,7 +185,7 @@ namespace MaintenanceRequestApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Close(Guid id)
+        public async Task<IActionResult> CompleteTask(Guid id, string? finalNote, IFormFile? imageFile, bool notifyRequester = false)
         {
             var req = await _context.RequestMaintenances.FindAsync(id);
             if (req != null && req.Status != 4 && req.Status != 5)
@@ -196,14 +196,46 @@ namespace MaintenanceRequestApp.Controllers
                 _context.AuditLogs.Add(new AuditLog
                 {
                     RequestId = id,
-                    UserId = User.Identity.Name,
+                    UserId = User.Identity!.Name,
                     Action = "Chuyển trạng thái thành Hoàn thành",
                     Timestamp = DateTime.UtcNow
                 });
                 
+                if (!string.IsNullOrEmpty(finalNote) || (imageFile != null && imageFile.Length > 0))
+                {
+                    var note = new MaintenanceNote
+                    {
+                        RequestId = id,
+                        UserId = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                        NoteContent = string.IsNullOrEmpty(finalNote) ? "Đã nghiệm thu hoàn thành." : finalNote,
+                        IsPublicResponse = true,
+                        ImagePath = string.Empty,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        var baseUploadPath = _configuration["FileUploadSettings:PhysicalPath"] ?? Path.Combine(_env.WebRootPath, "uploads");
+                        if (!Path.IsPathRooted(baseUploadPath)) baseUploadPath = Path.Combine(_env.ContentRootPath, baseUploadPath);
+
+                        var uploadFolder = Path.Combine(baseUploadPath, "notes");
+                        Directory.CreateDirectory(uploadFolder);
+                        var fileName = await _imageService.ProcessAndSaveImageAsync(imageFile, uploadFolder);
+                        note.ImagePath = $"/uploads/notes/{fileName}";
+                    }
+                    _context.MaintenanceNotes.Add(note);
+                }
+
                 await _context.SaveChangesAsync();
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "System", $"Yêu cầu {id} đã hoàn thành.");
                 TempData["SuccessMessage"] = "✅ Nhiệm vụ đã được đánh dấu Hoàn thành!";
+
+                if (notifyRequester && !string.IsNullOrEmpty(req.Email))
+                {
+                    var statusLink = Url.Action("Status", "Request", new { id = req.Id }, Request.Scheme);
+                    var emailBody = $"Chào {req.FullName}, Yêu cầu sửa chữa {req.EquipmentDamged} tại {req.Location} của bạn đã hoàn tất. Bạn có thể xem kết quả chi tiết tại đây: {statusLink}";
+                    await _emailService.SendEmailAsync(req.Email, $"[VIAA Maintenance] Hoàn thành yêu cầu sửa chữa: {req.EquipmentDamged}", emailBody);
+                }
             }
             return RedirectToAction(nameof(Details), new { id });
         }

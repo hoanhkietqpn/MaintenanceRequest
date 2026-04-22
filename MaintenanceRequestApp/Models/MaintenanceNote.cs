@@ -25,6 +25,8 @@ namespace MaintenanceRequestApp.Models
 
         public string ImagePath { get; set; } = string.Empty;
 
+        public bool IsPublicResponse { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

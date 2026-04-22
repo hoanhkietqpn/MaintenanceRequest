@@ -391,8 +391,22 @@
                     </div>
                     <div class="card-body">
                         <p class="small text-muted mb-3">Đánh dấu yêu cầu này đã được xử lý xong và chuyển sang trạng thái <strong class="text-success">Hoàn thành</strong>.</p>
-                        <form asp-controller="@closeController" asp-action="Close" method="post">
+                        <form asp-controller="@closeController" asp-action="CompleteTask" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Ghi chú nghiệm thu (Tùy chọn)</label>
+                                <textarea name="finalNote" class="form-control" rows="2" placeholder="Nhập kết quả xử lý cuối cùng..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Ảnh minh chứng (Tùy chọn)</label>
+                                <input type="file" name="imageFile" class="form-control form-control-sm" accept="image/jpeg,image/png,image/jpg,image/webp" />
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="notifyRequester" name="notifyRequester" value="true" checked>
+                                <label class="form-check-label small fw-bold text-dark" for="notifyRequester">
+                                    Ghi mail thông báo cho người yêu cầu / Send email to requester
+                                </label>
+                            </div>
                             <button type="submit" class="btn btn-success w-100 fw-bold"
                                     onclick="return confirm('Xác nhận hoàn thành nhiệm vụ này?')">
                                 <i class="bi bi-check2-all me-2"></i>XÁC NHẬN HOÀN THÀNH

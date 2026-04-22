@@ -1,0 +1,44 @@
+@{
+    Layout = "_LayoutPublic";
+    ViewData["Title"] = "Tra cứu Yêu cầu / Lookup Request";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0 rounded-3 mt-5">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0 fw-bold"><i class="bi bi-search me-2"></i>TRA CỨU / LOOKUP</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted text-center mb-4">
+                    Nhập mã yêu cầu (ID) của bạn để xem trạng thái xử lý hiện tại.<br />
+                    <small>Enter your Request ID to check its current status.</small>
+                </p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Lookup" method="post">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Mã yêu cầu / Request ID <span class="text-danger">*</span></label>
+                        <input type="text" name="requestId" class="form-control form-control-lg text-center font-monospace" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" required />
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
+                        <i class="bi bi-search me-2"></i>Tra cứu / Search
+                    </button>
+                    
+                    <div class="text-center mt-3">
+                        <a asp-action="Create" class="text-decoration-none small">
+                            <i class="bi bi-arrow-left me-1"></i>Quay lại trang tạo mới / Back to Create
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

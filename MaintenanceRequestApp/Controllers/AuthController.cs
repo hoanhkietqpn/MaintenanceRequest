@@ -142,7 +142,8 @@ namespace MaintenanceRequestApp.Controllers
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.NameIdentifier, user.UserId),
                 new Claim(ClaimTypes.Role, user.Role),
-                new Claim("FullName", $"{user.FirstName} {user.LastName}")
+                new Claim("FullName", $"{user.FirstName} {user.LastName}"),
+                new Claim(ClaimTypes.Email, user.Email ?? "")
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

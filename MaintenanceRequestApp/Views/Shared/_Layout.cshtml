@@ -180,8 +180,11 @@
             <div class="p-3">
                 <!-- User greeting -->
                 <p class="small text-uppercase mb-1 fw-bold text-white opacity-60 mb-0">Xin chào,</p>
-                <p class="text-white fw-bold mb-1 fs-6" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <p class="text-white fw-bold mb-0 fs-6" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                     <i class="bi bi-person-circle me-1 opacity-75"></i>@User.Identity!.Name
+                </p>
+                <p class="text-white-50 small mb-2" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value
                 </p>
                 <span class="badge @roleColorClass mb-3 px-2 py-1" style="font-size:0.72rem;">@friendlyRole</span>
 

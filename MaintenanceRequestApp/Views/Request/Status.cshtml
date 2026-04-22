@@ -49,19 +49,74 @@
             </div>
         </div>
 
-        <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-clock-history me-1"></i> Lịch sử Xử lý / Processing History</h5>
-        <div class="timeline ps-3" style="border-left: 2px solid #90c740;">
-            @if(Model.AuditLogs != null && Model.AuditLogs.Any())
-            {
-                foreach(var log in Model.AuditLogs.OrderByDescending(l => l.Timestamp))
-                {
-                    <div class="position-relative mb-4">
-                        <div class="position-absolute bg-primary rounded-circle" style="width: 12px; height: 12px; left: -23px; top: 5px;"></div>
-                        <div class="text-muted small">@log.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                        <div class="fw-bold mt-1">@log.Action</div>
-                    </div>
+        <!-- TIẾN ĐỘ XỬ LÝ -->
+        <h5 class="fw-bold mb-3 text-primary mt-4"><i class="bi bi-bar-chart-steps me-1"></i> Tiến độ Xử lý / Progress</h5>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                @{
+                    int progress = 25;
+                    if (Model.Status == 2) progress = 50;
+                    if (Model.Status == 3) progress = 75;
+                    if (Model.Status == 4) progress = 100;
+                    if (Model.Status == 5) progress = 100;
+                    
+                    var bgClass = Model.Status == 5 ? "bg-danger" : "bg-success";
                 }
-            }
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated @bgClass fw-bold" role="progressbar" style="width: @progress%;" aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100">
+                        @progress%
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2 small text-muted fw-bold">
+                    <span>Khởi tạo</span>
+                    <span>Đã duyệt</span>
+                    <span>Đang sửa</span>
+                    <span>@(Model.Status == 5 ? "Đã hủy" : "Hoàn thành")</span>
+                </div>
+            </div>
         </div>
+
+        <!-- NHÂN SỰ PHỤ TRÁCH -->
+        @if (Model.Assignments != null && Model.Assignments.Any())
+        {
+            <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-people-fill me-1"></i> Nhân sự phụ trách / Assigned Staff</h5>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var assign in Model.Assignments)
+                        {
+                            if (assign.User != null)
+                            {
+                                <span class="badge bg-secondary fs-6"><i class="bi bi-person-badge me-1"></i> @assign.User.FirstName @assign.User.LastName</span>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- PHẢN HỒI KẾT QUẢ TỪ QUẢN LÝ -->
+        @{
+            var finalNote = Model.MaintenanceNotes?.OrderByDescending(n => n.CreatedAt).FirstOrDefault(n => n.IsPublicResponse);
+        }
+        @if (finalNote != null)
+        {
+            <h5 class="fw-bold mb-3 text-success"><i class="bi bi-chat-dots-fill me-1"></i> Kết quả xử lý / Final Result</h5>
+            <div class="card shadow-sm border-success border-2 mb-4">
+                <div class="card-body bg-light">
+                    <p class="mb-3 fs-5">@finalNote.NoteContent</p>
+                    @if (!string.IsNullOrEmpty(finalNote.ImagePath))
+                    {
+                        <div>
+                            <p class="text-muted small mb-1 fw-bold">Ảnh nghiệm thu / Result Image:</p>
+                            <img src="@finalNote.ImagePath" class="img-fluid rounded border shadow-sm" style="max-height: 300px; object-fit: contain;" alt="Ảnh nghiệm thu" />
+                        </div>
+                    }
+                    <div class="text-end text-muted small mt-2">
+                        <i class="bi bi-clock me-1"></i> @finalNote.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

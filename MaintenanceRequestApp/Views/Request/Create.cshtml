@@ -16,6 +16,11 @@
                         @Html.ValidationSummary(false, "", new { @class = "mb-0" })
                     </div>
                 }
+                <div class="text-end mb-3">
+                    <a asp-action="Lookup" class="btn btn-outline-primary btn-sm fw-bold">
+                        <i class="bi bi-search me-1"></i>Tra cứu yêu cầu cũ / Track existing request
+                    </a>
+                </div>
 
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     <div class="row mb-3">
