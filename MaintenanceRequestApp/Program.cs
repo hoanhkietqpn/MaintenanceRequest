@@ -1,9 +1,12 @@
 using MaintenanceRequestApp.Data;
 using MaintenanceRequestApp.Hubs;
 using MaintenanceRequestApp.Services;
+using MaintenanceRequestApp.Filters;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,9 @@ builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 // 3.5 Register EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// 3.6 Register Reminder Service for Hangfire
+builder.Services.AddScoped<IReminderService, ReminderService>();
+
 // 4. Configure Authentication & Authorization
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -41,6 +47,16 @@ builder.Services.AddHttpClient();
 
 // 6. Config SignalR 
 builder.Services.AddSignalR();
+
+// 7. Configure Hangfire with PostgreSQL
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
+// Add the Hangfire processing server as IHostedService
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -83,6 +99,13 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 8. Map Hangfire Dashboard with custom authorization
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() },
+    DashboardTitle = "VIAA Maintenance - Hangfire"
+});
 
 app.MapHub<NotificationHub>("/notificationHub");
 

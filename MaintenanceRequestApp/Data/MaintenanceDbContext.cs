@@ -15,6 +15,7 @@ namespace MaintenanceRequestApp.Data
         public DbSet<RequestAssignment> RequestAssignments { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<MaintenanceNote> MaintenanceNotes { get; set; }
+        public DbSet<ReminderSetting> ReminderSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
