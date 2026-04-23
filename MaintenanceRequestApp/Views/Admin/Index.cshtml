@@ -1,11 +1,11 @@
 @model MaintenanceRequestApp.ViewModels.MaintenanceListViewModel
 @{
-    ViewData["Title"] = "Tổng quan Quản trị";
+    ViewData["Title"] = "Tất cả Yêu cầu";
 }
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-list-task me-2"></i> Danh sách Yêu cầu bảo trì</h5>
-        
+
         <form method="get" class="mb-4 bg-light p-3 rounded rounded-3 border">
             <div class="row g-2 align-items-end">
                 <div class="col-md-3">
@@ -23,22 +23,26 @@
                     <label class="form-label small fw-bold">Tìm kiếm</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" name="searchTerm" value="@Model.SearchTerm" placeholder="Họ tên, Thiết bị, Mô tả..." />
+                        <input type="text" class="form-control" name="searchTerm" value="@Model.SearchTerm"
+                            placeholder="Họ tên, Thiết bị, Mô tả..." />
                     </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Nhân viên phụ trách</label>
                     <select class="form-select form-select-sm" name="staffId">
                         <option value="">-- Chọn nhân viên --</option>
-                        @foreach(var staff in ViewBag.Staffs)
+                        @foreach (var staff in ViewBag.Staffs)
                         {
-                            <option value="@staff.UserId" selected="@(Model.StaffId == staff.UserId)">@staff.FirstName @staff.LastName</option>
+                            <option value="@staff.UserId" selected="@(Model.StaffId == staff.UserId)">@staff.FirstName
+                                @staff.LastName</option>
                         }
                     </select>
                 </div>
                 <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel me-1"></i> Lọc</button>
-                    <a href="/Admin/Index" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-x-circle me-1"></i> Xóa</a>
+                    <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel me-1"></i>
+                        Lọc</button>
+                    <a href="/Admin/Index" class="btn btn-sm btn-outline-secondary w-100"><i
+                            class="bi bi-x-circle me-1"></i> Xóa</a>
                 </div>
             </div>
         </form>
@@ -57,52 +61,73 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var item in Model.Requests)
+                    @foreach (var item in Model.Requests)
                     {
                         <tr>
                             <td>
-                                @if(item.Status == 1){ <span class="badge bg-secondary">Khởi tạo</span> }
-                                else if(item.Status == 2){ <span class="badge bg-info">Đã phê duyệt</span> }
-                                else if(item.Status == 3){ <span class="badge bg-warning text-dark">Đang sửa</span> }
-                                else if(item.Status == 4){ <span class="badge bg-success">Hoàn thành</span> }
+                                @if (item.Status == 1)
+                                {
+                                    <span class="badge bg-secondary">Khởi tạo</span>
+                                }
+                                else if (item.Status == 2)
+                                {
+                                    <span class="badge bg-info">Đã phê duyệt</span>
+                                }
+                                else if (item.Status == 3)
+                                {
+                                    <span class="badge bg-warning text-dark">Đang sửa</span>
+                                }
+                                else if (item.Status == 4)
+                                {
+                                    <span class="badge bg-success">Hoàn thành</span>
+                                }
                             </td>
                             <td class="fw-bold">@item.EquipmentDamged</td>
                             <td>@item.Location</td>
                             <td>@item.Urgency</td>
                             <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td>
-                                @if(item.Assignments != null && item.Assignments.Any())
+                                @if (item.Assignments != null && item.Assignments.Any())
                                 {
                                     <div class="d-flex flex-wrap gap-1">
-                                    @foreach(var a in item.Assignments)
-                                    {
-                                        <span class="badge bg-info">@(a.User?.FirstName + " " + a.User?.LastName)</span>
-                                    }
+                                        @foreach (var a in item.Assignments)
+                                        {
+                                            <span class="badge bg-info">@(a.User?.FirstName + " " + a.User?.LastName)</span>
+                                        }
                                     </div>
                                 }
-                                else { <span class="text-muted small">Chưa phân công</span> }
+                                else
+                                {
+                                    <span class="text-muted small">Chưa phân công</span>
+                                }
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
-                                    <a href="@Url.Action("Details", "Admin", new { id = item.Id })" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                    <a href="@Url.Action("Details", "Admin", new { id = item.Id })"
+                                        class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if(item.Status == 1)
+                                    @if (item.Status == 1)
                                     {
                                         <form asp-action="Approve" method="post">
                                             <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-success" title="Phê duyệt"><i class="bi bi-check-lg"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-success" title="Phê duyệt"><i
+                                                    class="bi bi-check-lg"></i></button>
                                         </form>
                                     }
-                                    @if(item.Status == 2 || item.Status == 3)
+                                    @if (item.Status == 2 || item.Status == 3)
                                     {
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal-@item.Id" title="Giao việc"><i class="bi bi-person-plus"></i></button>
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                            data-bs-target="#assignModal-@item.Id" title="Giao việc"><i
+                                                class="bi bi-person-plus"></i></button>
                                     }
-                                    @if(item.Status != 4 && item.Status != 5)
+                                    @if (item.Status != 4 && item.Status != 5)
                                     {
                                         <form asp-action="Close" method="post">
                                             <input type="hidden" name="id" value="@item.Id" />
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Đóng Task" onclick="return confirm('Chắc chắn đóng yêu cầu này?');"><i class="bi bi-x-octagon"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Đóng Task"
+                                                onclick="return confirm('Chắc chắn đóng yêu cầu này?');"><i
+                                                    class="bi bi-x-octagon"></i></button>
                                         </form>
                                     }
                                 </div>
@@ -115,35 +140,44 @@
                                 <div class="modal-content">
                                     <div class="modal-header bg-primary text-white">
                                         <h5 class="modal-title">Phân công việc</h5>
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        <button type="button" class="btn-close btn-close-white"
+                                            data-bs-dismiss="modal"></button>
                                     </div>
                                     <form asp-action="Assign" method="post">
                                         <div class="modal-body">
                                             <input type="hidden" name="requestId" value="@item.Id" />
                                             <div class="mb-3">
                                                 <label class="form-label">Chọn nhân sự</label>
-                                                <select name="selectedStaffIds" class="form-select form-select-sm select2-staff" multiple="multiple" style="width: 100%;" required>
-                                                    @foreach(var staff in ViewBag.Staffs)
+                                                <select name="selectedStaffIds"
+                                                    class="form-select form-select-sm select2-staff" multiple="multiple"
+                                                    style="width: 100%;" required>
+                                                    @foreach (var staff in ViewBag.Staffs)
                                                     {
-                                                        var isSelected = item.Assignments != null && item.Assignments.Any(a => a.UserId == staff.UserId);
-                                                        if (isSelected) 
+                                                        var isSelected = item.Assignments != null && item.Assignments.Any(a =>
+                                                        a.UserId == staff.UserId);
+                                                        if (isSelected)
                                                         {
-                                                            <option value="@staff.UserId" selected="selected">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                            <option value="@staff.UserId" selected="selected">@staff.Username -
+                                                                @staff.FirstName @staff.LastName</option>
                                                         }
-                                                        else 
+                                                        else
                                                         {
-                                                            <option value="@staff.UserId">@staff.Username - @staff.FirstName @staff.LastName</option>
+                                                            <option value="@staff.UserId">@staff.Username - @staff.FirstName
+                                                                @staff.LastName</option>
                                                         }
                                                     }
                                                 </select>
                                             </div>
                                             <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" name="notifyEmail" value="true" id="mail-admin-@item.Id">
-                                                <label class="form-check-label small" for="mail-admin-@item.Id">Gửi Email thông báo</label>
+                                                <input class="form-check-input" type="checkbox" name="notifyEmail"
+                                                    value="true" id="mail-admin-@item.Id">
+                                                <label class="form-check-label small" for="mail-admin-@item.Id">Gửi Email
+                                                    thông báo</label>
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Đóng</button>
                                             <button type="submit" class="btn btn-primary">Giao việc</button>
                                         </div>
                                     </form>
@@ -164,13 +198,17 @@
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination pagination-sm justify-content-center">
                     <li class="page-item @prevDisabled">
-                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex - 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang trước</a>
+                        <a class="page-link"
+                            href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex - 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang
+                            trước</a>
                     </li>
                     <li class="page-item disabled">
                         <a class="page-link">Trang @Model.Requests.PageIndex / @Model.Requests.TotalPages</a>
                     </li>
                     <li class="page-item @nextDisabled">
-                        <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex + 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang sau</a>
+                        <a class="page-link"
+                            href="@Url.Action("Index", new { pageNumber = Model.Requests.PageIndex + 1, status = Model.Status, searchTerm = Model.SearchTerm, staffId = Model.StaffId })">Trang
+                            sau</a>
                     </li>
                 </ul>
             </nav>

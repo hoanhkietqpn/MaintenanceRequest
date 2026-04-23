@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,14 +11,33 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         /* ─────────── Brand Colors ─────────── */
-        .bg-vjaa   { background-color: #90c740 !important; }
-        .text-vjaa { color: #90c740 !important; }
-        .btn-vjaa  { background-color: #90c740; border-color: #90c740; color: white; }
-        .btn-vjaa:hover { background-color: #7ba936; border-color: #7ba936; color: white; }
-        .border-vjaa { border-color: #90c740 !important; }
+        .bg-vjaa {
+            background-color: #90c740 !important;
+        }
+
+        .text-vjaa {
+            color: #90c740 !important;
+        }
+
+        .btn-vjaa {
+            background-color: #90c740;
+            border-color: #90c740;
+            color: white;
+        }
+
+        .btn-vjaa:hover {
+            background-color: #7ba936;
+            border-color: #7ba936;
+            color: white;
+        }
+
+        .border-vjaa {
+            border-color: #90c740 !important;
+        }
 
         /* ─────────── Full-Screen Layout Fix ─────────── */
-        html, body {
+        html,
+        body {
             height: 100%;
             min-height: 100vh;
             margin: 0;
@@ -73,7 +93,8 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            min-width: 0; /* prevents overflow */
+            min-width: 0;
+            /* prevents overflow */
             background: #f8f9fa;
         }
 
@@ -99,7 +120,9 @@
             transition: color 0.2s;
         }
 
-        #sidebar-toggle:hover { color: #90c740; }
+        #sidebar-toggle:hover {
+            color: #90c740;
+        }
 
         /* ─────────── Mobile: Overlay sidebar ─────────── */
         @@media (max-width: 991.98px) {
@@ -122,11 +145,13 @@
                 display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.45);
+                background: rgba(0, 0, 0, 0.45);
                 z-index: 1040;
             }
 
-            #sidebar-overlay.show { display: block; }
+            #sidebar-overlay.show {
+                display: block;
+            }
 
             #page-body {
                 padding: 1rem;
@@ -135,29 +160,33 @@
 
         /* ─────────── Sticky sidebar (Details page) ─────────── */
         @@media (min-width: 992px) {
-            .sticky-sidebar { position: sticky; top: 20px; }
+            .sticky-sidebar {
+                position: sticky;
+                top: 20px;
+            }
         }
     </style>
 </head>
+
 <body>
-@{
-    // ── Role Display Formatter ──
-    var rawRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
-    var friendlyRole = rawRole switch
-    {
-        "Admin"            => "Quản trị viên (Admin)",
-        "QuanLyKyThuat"    => "Quản lý Kỹ thuật",
-        "NhanVienKyThuat"  => "Nhân viên Kỹ thuật",
-        _                  => rawRole
-    };
-    var roleColorClass = rawRole switch
-    {
-        "Admin"            => "bg-danger",
-        "QuanLyKyThuat"    => "bg-primary",
-        "NhanVienKyThuat"  => "bg-vjaa",
-        _                  => "bg-secondary"
-    };
-}
+    @{
+        // ── Role Display Formatter ──
+        var rawRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        var friendlyRole = rawRole switch
+        {
+            "Admin" => "Quản trị viên (Admin)",
+            "QuanLyKyThuat" => "Quản lý Kỹ thuật",
+            "NhanVienKyThuat" => "Nhân viên Kỹ thuật",
+            _ => rawRole
+        };
+        var roleColorClass = rawRole switch
+        {
+            "Admin" => "bg-danger",
+            "QuanLyKyThuat" => "bg-primary",
+            "NhanVienKyThuat" => "bg-vjaa",
+            _ => "bg-secondary"
+        };
+    }
 
     <!-- Sidebar Overlay (mobile backdrop) -->
     <div id="sidebar-overlay"></div>
@@ -168,10 +197,8 @@
         <div id="sidebar" class="text-white shadow-sm">
             <!-- Sidebar Header: Logo -->
             <div class="px-3 py-2 bg-white d-flex align-items-center justify-content-between border-bottom">
-                <img src="~/images/LOGO_VJ_VIAA.png"
-                     alt="VIAA Logo"
-                     style="height:42px;object-fit:contain;max-width:180px;"
-                     class="d-inline-block" />
+                <img src="~/images/LOGO_VJ_VIAA.png" alt="VIAA Logo"
+                    style="height:42px;object-fit:contain;max-width:180px;" class="d-inline-block" />
                 <!-- Close button (mobile) -->
                 <button id="sidebar-close" class="btn btn-sm btn-link text-muted p-0 d-lg-none" title="Đóng menu">
                     <i class="bi bi-x-lg fs-5"></i>
@@ -180,7 +207,8 @@
             <div class="p-3">
                 <!-- User greeting -->
                 <p class="small text-uppercase mb-1 fw-bold text-white opacity-60 mb-0">Xin chào,</p>
-                <p class="text-white fw-bold mb-0 fs-6" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <p class="text-white fw-bold mb-0 fs-6"
+                    style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                     <i class="bi bi-person-circle me-1 opacity-75"></i>@User.Identity!.Name
                 </p>
                 <p class="text-white-50 small mb-2" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -190,18 +218,20 @@
 
                 <h6 class="text-uppercase text-white small mt-2 fw-bold opacity-75">Menu</h6>
                 <nav class="nav flex-column">
-                    @if(User.IsInRole("Admin"))
+                    @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/Index" class="mb-1 rounded"><i class="bi bi-house-door me-2"></i>Tổng quan Admin</a>
+                        <a href="/Admin/Index" class="mb-1 rounded"><i class="bi bi-house-door me-2"></i>Tất cả Yêu cầu</a>
                         <a href="/Admin/Users" class="mb-1 rounded"><i class="bi bi-people me-2"></i>Quản lý Người dùng</a>
-                        <a href="/Reminder/Index" class="mb-1 rounded"><i class="bi bi-clock-history me-2"></i>Cấu hình nhắc nhở</a>
+                        <a href="/Reminder/Index" class="mb-1 rounded"><i class="bi bi-clock-history me-2"></i>Cấu hình nhắc
+                            nhở</a>
                     }
-                    @if(User.IsInRole("QuanLyKyThuat") || User.IsInRole("Admin"))
+                    @if (User.IsInRole("QuanLyKyThuat") || User.IsInRole("Admin"))
                     {
-                        <a href="/Manager/Index" class="mb-1 rounded"><i class="bi bi-person-gear me-2"></i>Trưởng nhóm Kỹ thuật</a>
+                        <a href="/Manager/Index" class="mb-1 rounded"><i class="bi bi-person-gear me-2"></i>Trưởng nhóm Kỹ
+                            thuật</a>
                         <a href="/KPI/Index" class="mb-1 rounded"><i class="bi bi-bar-chart-line me-2"></i>Báo cáo KPI</a>
                     }
-                    @if(User.IsInRole("NhanVienKyThuat") || User.IsInRole("QuanLyKyThuat"))
+                    @if (User.IsInRole("NhanVienKyThuat") || User.IsInRole("QuanLyKyThuat"))
                     {
                         <a href="/Staff/Index" class="mb-1 rounded"><i class="bi bi-hammer me-2"></i>Nhiệm vụ của tôi</a>
                     }
@@ -219,7 +249,8 @@
         <!-- ══ MAIN CONTENT ══ -->
         <div id="main-content">
             <!-- Navbar -->
-            <nav id="main-navbar" class="navbar navbar-light bg-white border-bottom shadow-sm px-3 px-md-4 py-2 d-flex align-items-center gap-2">
+            <nav id="main-navbar"
+                class="navbar navbar-light bg-white border-bottom shadow-sm px-3 px-md-4 py-2 d-flex align-items-center gap-2">
                 <!-- Hamburger toggle -->
                 <button id="sidebar-toggle" title="Đóng/Mở menu">
                     <i class="bi bi-list"></i>
@@ -259,11 +290,11 @@
         connection.start().catch(err => console.error(err.toString()));
 
         // ── Sidebar Toggle ──
-        const sidebar       = document.getElementById('sidebar');
-        const overlay       = document.getElementById('sidebar-overlay');
-        const toggleBtn     = document.getElementById('sidebar-toggle');
-        const closeBtn      = document.getElementById('sidebar-close');
-        const isMobile      = () => window.innerWidth < 992;
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const closeBtn = document.getElementById('sidebar-close');
+        const isMobile = () => window.innerWidth < 992;
 
         // Khởi tạo trạng thái: mobile → collapsed mặc định
         function initSidebar() {
@@ -307,4 +338,5 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

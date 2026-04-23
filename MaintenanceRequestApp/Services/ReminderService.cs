@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MaintenanceRequestApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace MaintenanceRequestApp.Services
 {
@@ -11,12 +12,14 @@ namespace MaintenanceRequestApp.Services
         private readonly MaintenanceDbContext _context;
         private readonly IEmailService _emailService;
         private readonly ILogger<ReminderService> _logger;
+        private readonly IConfiguration _configuration;
 
-        public ReminderService(MaintenanceDbContext context, IEmailService emailService, ILogger<ReminderService> logger)
+        public ReminderService(MaintenanceDbContext context, IEmailService emailService, ILogger<ReminderService> logger, IConfiguration configuration)
         {
             _context = context;
             _emailService = emailService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task SendUnapprovedRequestsReminder()
@@ -37,7 +40,7 @@ namespace MaintenanceRequestApp.Services
 
             // Lấy danh sách email cấu hình từ ReminderSetting (lấy bản ghi đang active đầu tiên)
             var setting = await _context.ReminderSettings.FirstOrDefaultAsync(s => s.IsActive);
-            
+
             if (setting == null || string.IsNullOrWhiteSpace(setting.TargetEmails))
             {
                 _logger.LogWarning("Không tìm thấy cấu hình ReminderSetting hoặc danh sách email trống.");
@@ -66,12 +69,20 @@ namespace MaintenanceRequestApp.Services
             emailContent += "</tbody></table>";
             emailContent += "<br/><p>Vui lòng đăng nhập vào hệ thống để kiểm tra và phân công xử lý.</p>";
 
+            // Lấy AppUrl từ appsettings.json, mặc định dùng /Admin/Index (relative) nếu không có
+            var appUrl = _configuration["AppUrl"] ?? "https://helpdesk.viaa.edu.vn/";
+            var adminLink = $"{appUrl.TrimEnd('/')}/Admin/Index";
+
+            emailContent += $"<div style='margin-top: 20px;'>" +
+                            $"<a href='{adminLink}' style='background-color: #0d6efd; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>Đăng nhập để duyệt ngay</a>" +
+                            $"</div>";
+
             // Gửi email cho từng người trong danh sách
             foreach (var email in emails)
             {
                 await _emailService.SendEmailAsync(
-                    email, 
-                    $"[Nhắc nhở] Có {unapprovedRequests.Count} yêu cầu bảo trì cần phê duyệt", 
+                    email,
+                    $"[Nhắc nhở] Có {unapprovedRequests.Count} yêu cầu bảo trì cần phê duyệt",
                     emailContent);
             }
 
